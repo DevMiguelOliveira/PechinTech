@@ -1,0 +1,61 @@
+import { Package } from 'lucide-react';
+import { Product } from '@/types';
+import { ProductCard } from '@/components/ProductCard';
+
+interface ProductGridProps {
+  products: Product[];
+  onOpenDetails: (product: Product) => void;
+  onToggleFavorite: (productId: string) => void;
+  onVoteHot: (productId: string) => void;
+  onVoteCold: (productId: string) => void;
+  favorites: Set<string>;
+  title?: string;
+}
+
+export function ProductGrid({
+  products,
+  onOpenDetails,
+  onToggleFavorite,
+  onVoteHot,
+  onVoteCold,
+  favorites,
+  title = 'Todas as Promoções',
+}: ProductGridProps) {
+  if (products.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Package className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Nenhuma promoção encontrada</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Tente ajustar os filtros ou buscar por outros termos.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="py-6">
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <ProductCard
+              product={product}
+              onOpenDetails={onOpenDetails}
+              onToggleFavorite={onToggleFavorite}
+              onVoteHot={onVoteHot}
+              onVoteCold={onVoteCold}
+              isFavorite={favorites.has(product.id)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

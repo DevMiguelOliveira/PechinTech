@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 187 100% 43%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 15%;
+    --ring: 24 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens for PechinTech */
+    --neon-orange: 24 100% 50%;
+    --neon-orange-glow: 24 100% 60%;
+    --cyber-blue: 187 100% 43%;
+    --cyber-blue-glow: 187 100% 55%;
+    --hot-red: 0 85% 55%;
+    --cold-blue: 210 100% 50%;
+    --surface-elevated: 0 0% 10%;
+    --surface-hover: 0 0% 14%;
+    
+    /* Gradients */
+    --gradient-hot: linear-gradient(90deg, hsl(210, 100%, 50%) 0%, hsl(24, 100%, 50%) 50%, hsl(0, 85%, 55%) 100%);
+    --gradient-card-border: linear-gradient(135deg, hsl(24, 100%, 50%, 0.3) 0%, hsl(187, 100%, 43%, 0.1) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0, 0%, 6%) 0%, hsl(0, 0%, 4%) 100%);
+    --gradient-button: linear-gradient(135deg, hsl(24, 100%, 50%) 0%, hsl(24, 100%, 40%) 100%);
+
+    /* Shadows */
+    --shadow-glow-orange: 0 0 30px hsl(24, 100%, 50%, 0.3);
+    --shadow-glow-blue: 0 0 30px hsl(187, 100%, 43%, 0.3);
+    --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.4);
+    --shadow-card-hover: 0 8px 40px hsl(0, 0%, 0%, 0.6);
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 24 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-display {
+    font-family: 'Orbitron', sans-serif;
+  }
+}
+
+@layer components {
+  .glow-orange {
+    box-shadow: 0 0 20px hsl(var(--neon-orange) / 0.4),
+                0 0 40px hsl(var(--neon-orange) / 0.2),
+                0 0 60px hsl(var(--neon-orange) / 0.1);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px hsl(var(--cyber-blue) / 0.4),
+                0 0 40px hsl(var(--cyber-blue) / 0.2),
+                0 0 60px hsl(var(--cyber-blue) / 0.1);
+  }
+
+  .card-glow {
+    position: relative;
+  }
+
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--neon-orange) / 0.3) 0%, transparent 50%, hsl(var(--cyber-blue) / 0.2) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .thermometer-gradient {
+    background: linear-gradient(90deg, 
+      hsl(var(--cold-blue)) 0%, 
+      hsl(var(--cyber-blue)) 25%,
+      hsl(40, 100%, 50%) 50%, 
+      hsl(var(--neon-orange)) 75%, 
+      hsl(var(--hot-red)) 100%
+    );
+  }
+
+  .text-gradient-hot {
+    background: linear-gradient(90deg, hsl(var(--neon-orange)) 0%, hsl(var(--hot-red)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-cold {
+    background: linear-gradient(90deg, hsl(var(--cold-blue)) 0%, hsl(var(--cyber-blue)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--neon-orange) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 35px hsl(var(--neon-orange) / 0.6);
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer utilities {
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+  }
+}
