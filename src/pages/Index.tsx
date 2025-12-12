@@ -7,6 +7,7 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { MobileFilters } from '@/components/MobileFilters';
 import { FavoritesDrawer } from '@/components/FavoritesDrawer';
+import { SEO } from '@/components/SEO';
 import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
 import { useVote } from '@/hooks/useVotes';
@@ -160,6 +161,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Promoções de Tecnologia"
+        description="Encontre as melhores promoções de tecnologia. Hardware, periféricos, games e smartphones com os menores preços. Vote nas ofertas e compartilhe com a comunidade!"
+        url="/"
+      />
+      
       {/* Header */}
       <Header
         onOpenFavorites={() => setIsFavoritesOpen(true)}

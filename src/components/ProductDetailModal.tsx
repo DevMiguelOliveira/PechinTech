@@ -75,6 +75,9 @@ export function ProductDetailModal({
                 src={product.image_url}
                 alt={product.title}
                 className="w-full h-full object-cover"
+                loading="eager"
+                width={800}
+                height={450}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
               
@@ -119,10 +122,11 @@ export function ProductDetailModal({
                   <Button
                     variant="neon"
                     size="lg"
-                    className="w-full mt-2"
-                    onClick={() => window.open(product.affiliate_url, '_blank')}
+                    className="w-full mt-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
+                    aria-label={`Ir para ${product.store} comprar ${product.title}`}
                   >
-                    <ExternalLink className="h-5 w-5" />
+                    <ExternalLink className="h-5 w-5" aria-hidden="true" />
                     Pegar Promoção
                   </Button>
                 </div>
@@ -176,15 +180,18 @@ export function ProductDetailModal({
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
-                    className="bg-surface-elevated border-border/50"
+                    className="bg-surface-elevated border-border/50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-label="Campo de comentário"
                   />
                   <Button
                     variant="default"
                     size="icon"
                     onClick={handleSubmitComment}
                     disabled={!newComment.trim()}
+                    aria-label="Enviar comentário"
+                    className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
 

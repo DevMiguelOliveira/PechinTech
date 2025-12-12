@@ -1,14 +1,58 @@
+# Robots.txt para PechinTech
+# https://pechintech.com/robots.txt
+
+# Permissões para principais crawlers
 User-agent: Googlebot
 Allow: /
+Disallow: /admin/
+Disallow: /auth
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin/
+Disallow: /auth
+Crawl-delay: 1
 
+User-agent: Slurp
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+
+User-agent: Baiduspider
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+
+# Social Media Bots
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+# Regras gerais
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /auth
+Disallow: /*.json$
+Disallow: /*?*
+
+# Sitemap
+Sitemap: https://pechintech.com/sitemap.xml

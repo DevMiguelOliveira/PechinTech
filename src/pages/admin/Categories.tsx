@@ -57,6 +57,7 @@ import {
   Laptop,
   Package,
 } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 
 const iconOptions = [
   { value: 'Cpu', label: 'CPU', Icon: Cpu },
@@ -194,6 +195,12 @@ const Categories = () => {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title="Painel Administrativo - Categorias"
+        description="Gerencie categorias de produtos no painel administrativo do PechinTech"
+        url="/admin/categories"
+        noindex
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Categorias</h1>

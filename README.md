@@ -62,7 +62,36 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Opções de Deploy
+
+**Opção 1: Vercel (Recomendado)**
+1. Instale a CLI: `npm i -g vercel`
+2. Execute: `vercel`
+3. Configure as variáveis de ambiente no dashboard
+4. Deploy: `vercel --prod`
+
+**Opção 2: Netlify**
+1. Instale a CLI: `npm i -g netlify-cli`
+2. Execute: `netlify init`
+3. Configure variáveis de ambiente
+4. Deploy: `netlify deploy --prod`
+
+**Opção 3: Outras plataformas**
+- Cloudflare Pages
+- AWS Amplify
+- GitHub Pages
+- Railway
+
+📖 **Guia completo de deploy:** Veja [DEPLOY.md](./DEPLOY.md) para instruções detalhadas.
+
+### Variáveis de Ambiente Necessárias
+
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sua-chave-publica-aqui
+```
+
+⚠️ **IMPORTANTE:** Configure essas variáveis no painel da plataforma de deploy antes de fazer deploy!
 
 ## Can I connect a custom domain to my Lovable project?
 

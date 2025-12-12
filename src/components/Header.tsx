@@ -45,6 +45,8 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
               className="pl-10 bg-secondary border-border/50 focus:border-primary/50 focus:ring-primary/20 h-10"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Buscar promoções"
+              type="search"
             />
           </div>
         </div>
@@ -66,11 +68,12 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
             variant="ghost"
             size="icon"
             onClick={onOpenFavorites}
-            className="relative hover:text-primary"
+            className="relative hover:text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label={`Favoritos (${favoritesCount} item${favoritesCount !== 1 ? 's' : ''})`}
           >
-            <Heart className="h-5 w-5" />
+            <Heart className="h-5 w-5" aria-hidden="true" />
             {favoritesCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground" aria-hidden="true">
                 {favoritesCount}
               </span>
             )}
@@ -99,20 +102,25 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </Button>
         </div>
       </div>
 
       {/* Mobile Search & Menu */}
       <div
+        id="mobile-menu"
         className={cn(
           'md:hidden overflow-hidden transition-all duration-300',
           isMobileMenuOpen ? 'max-h-64 border-t border-border/50' : 'max-h-0'
         )}
+        aria-hidden={!isMobileMenuOpen}
       >
         <div className="container py-4 space-y-4">
           {/* Mobile Search */}
@@ -120,9 +128,11 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar promoções..."
-              className="pl-10 bg-secondary border-border/50"
+              className="pl-10 bg-secondary border-border/50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Buscar promoções"
+              type="search"
             />
           </div>
 

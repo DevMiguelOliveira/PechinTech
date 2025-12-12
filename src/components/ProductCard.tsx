@@ -58,14 +58,16 @@ export function ProductCard({
         className={cn(
           'absolute top-3 right-3 z-10 rounded-full bg-background/80 backdrop-blur-sm',
           'hover:bg-background hover:scale-110 transition-all',
+          'focus:ring-2 focus:ring-primary focus:ring-offset-2',
           isFavorite && 'text-primary'
         )}
         onClick={(e) => {
           e.stopPropagation();
           onToggleFavorite(product.id);
         }}
+        aria-label={isFavorite ? `Remover ${product.title} dos favoritos` : `Adicionar ${product.title} aos favoritos`}
       >
-        <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} />
+        <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} aria-hidden="true" />
       </Button>
 
       {/* Product Image */}
@@ -76,7 +78,10 @@ export function ProductCard({
         <img
           src={product.image_url}
           alt={product.title}
+          loading="lazy"
           className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+          width={400}
+          height={400}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent pointer-events-none" />
       </div>
@@ -126,20 +131,22 @@ export function ProductCard({
         <div className="flex items-center gap-1.5 md:gap-2 mt-auto pt-2">
           <Button
             variant="neon"
-            className="flex-1 text-[10px] md:text-sm h-8 md:h-9 px-2 md:px-3"
-            onClick={() => window.open(product.affiliate_url, '_blank')}
+            className="flex-1 text-[10px] md:text-sm h-8 md:h-9 px-2 md:px-3 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
+            aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
-            <ExternalLink className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
+            <ExternalLink className="h-3 w-3 md:h-4 md:w-4 shrink-0" aria-hidden="true" />
             <span className="hidden xs:inline">Pegar</span>
             <span className="xs:hidden">Ir</span>
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-8 w-8 md:h-9 md:w-9"
+            className="shrink-0 h-8 w-8 md:h-9 md:w-9 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={() => onOpenDetails(product)}
+            aria-label={`Ver detalhes e comentários de ${product.title}`}
           >
-            <MessageCircle className="h-3 w-3 md:h-4 md:w-4" />
+            <MessageCircle className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
           </Button>
           <span className="text-[10px] md:text-xs text-muted-foreground">
             {product.comments_count}

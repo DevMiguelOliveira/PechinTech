@@ -3,6 +3,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, FolderTree, TrendingUp, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEO } from '@/components/SEO';
 
 const StatCard = ({
   title,
@@ -51,6 +52,12 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title="Painel Administrativo - Dashboard"
+        description="Painel administrativo do PechinTech - Gerencie produtos, categorias e visualize estatísticas"
+        url="/admin"
+        noindex
+      />
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-1">

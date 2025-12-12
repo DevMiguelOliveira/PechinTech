@@ -68,15 +68,19 @@ export function Sidebar({
                     variant="ghost"
                     className={cn(
                       'w-full justify-start gap-3 font-normal',
+                      'focus:ring-2 focus:ring-primary focus:ring-offset-2',
                       selectedSort === option.id && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => onSelectSort(option.id)}
+                    aria-pressed={selectedSort === option.id}
+                    aria-label={`Ordenar por ${option.name}`}
                   >
                     <Icon
                       className={cn(
                         'h-4 w-4',
                         selectedSort === option.id && 'text-primary'
                       )}
+                      aria-hidden="true"
                     />
                     {option.name}
                   </Button>
@@ -98,9 +102,12 @@ export function Sidebar({
                 variant="ghost"
                 className={cn(
                   'w-full justify-start gap-3 font-normal',
+                  'focus:ring-2 focus:ring-primary focus:ring-offset-2',
                   selectedCategory === null && 'bg-primary/10 text-primary'
                 )}
                 onClick={() => onSelectCategory(null)}
+                aria-pressed={selectedCategory === null}
+                aria-label="Filtrar todas as categorias"
               >
                 Todas as categorias
               </Button>
@@ -112,15 +119,19 @@ export function Sidebar({
                     variant="ghost"
                     className={cn(
                       'w-full justify-start gap-3 font-normal',
+                      'focus:ring-2 focus:ring-primary focus:ring-offset-2',
                       selectedCategory === category.id && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => onSelectCategory(category.id as Category)}
+                    aria-pressed={selectedCategory === category.id}
+                    aria-label={`Filtrar por categoria ${category.name}`}
                   >
                     <Icon
                       className={cn(
                         'h-4 w-4',
                         selectedCategory === category.id && 'text-primary'
                       )}
+                      aria-hidden="true"
                     />
                     {category.name}
                   </Button>

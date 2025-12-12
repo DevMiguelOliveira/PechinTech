@@ -61,11 +61,16 @@ export function MobileFilters({
           {/* Filter Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="shrink-0">
-                <Filter className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="shrink-0 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label={`Abrir filtros${activeFiltersCount > 0 ? `. ${activeFiltersCount} filtro${activeFiltersCount !== 1 ? 's' : ''} ativo${activeFiltersCount !== 1 ? 's' : ''}` : ''}`}
+              >
+                <Filter className="h-4 w-4 mr-2" aria-hidden="true" />
                 Filtros
                 {activeFiltersCount > 0 && (
-                  <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center bg-primary text-primary-foreground">
+                  <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center bg-primary text-primary-foreground" aria-hidden="true">
                     {activeFiltersCount}
                   </Badge>
                 )}
@@ -93,8 +98,11 @@ export function MobileFilters({
                             onSelectSort(option.id);
                             setIsOpen(false);
                           }}
+                          aria-pressed={selectedSort === option.id}
+                          aria-label={`Ordenar por ${option.name}`}
+                          className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
-                          <Icon className="h-4 w-4 mr-2" />
+                          <Icon className="h-4 w-4 mr-2" aria-hidden="true" />
                           {option.name}
                         </Button>
                       );
@@ -117,6 +125,9 @@ export function MobileFilters({
                         onSelectCategory(null);
                         setIsOpen(false);
                       }}
+                      aria-pressed={selectedCategory === null}
+                      aria-label="Mostrar todas as categorias"
+                      className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     >
                       Todas
                     </Button>
@@ -131,8 +142,11 @@ export function MobileFilters({
                             onSelectCategory(category.id as Category);
                             setIsOpen(false);
                           }}
+                          aria-pressed={selectedCategory === category.id}
+                          aria-label={`Filtrar por ${category.name}`}
+                          className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
-                          <Icon className="h-4 w-4 mr-2" />
+                          <Icon className="h-4 w-4 mr-2" aria-hidden="true" />
                           {category.name}
                         </Button>
                       );

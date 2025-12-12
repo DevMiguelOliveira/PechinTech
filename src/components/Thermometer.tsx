@@ -74,7 +74,14 @@ export function Thermometer({
       </div>
 
       {/* Temperature Bar */}
-      <div className={cn('w-full rounded-full bg-muted overflow-hidden', styles.bar)}>
+      <div 
+        className={cn('w-full rounded-full bg-muted overflow-hidden', styles.bar)}
+        role="progressbar"
+        aria-valuenow={temperature}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Temperatura: ${temperature}°C - ${getTemperatureLabel()}`}
+      >
         <div
           className="h-full thermometer-gradient transition-all duration-500 ease-out"
           style={{ width: `${Math.min(100, Math.max(0, temperature))}%` }}
@@ -83,26 +90,28 @@ export function Thermometer({
 
       {/* Vote Buttons */}
       {showButtons && (
-        <div className="flex items-center justify-between mt-1">
+        <div className="flex items-center justify-between mt-1" role="group" aria-label="Votar na temperatura da promoção">
           <Button
             variant="ghost"
             size="icon"
             className={cn(
               'rounded-full hover:bg-temperature-hot/20 hover:text-temperature-hot transition-all',
+              'focus:ring-2 focus:ring-primary focus:ring-offset-2',
               styles.button
             )}
             onClick={onVoteHot}
+            aria-label={`Votar quente. Atualmente ${hotVotes} votos quentes.`}
           >
-            <Flame className={styles.icon} />
+            <Flame className={styles.icon} aria-hidden="true" />
           </Button>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
             <span className="flex items-center gap-1">
-              <Flame className="h-3 w-3 text-temperature-hot" />
-              {hotVotes}
+              <Flame className="h-3 w-3 text-temperature-hot" aria-hidden="true" />
+              <span aria-label={`${hotVotes} votos quentes`}>{hotVotes}</span>
             </span>
             <span className="flex items-center gap-1">
-              <Snowflake className="h-3 w-3 text-temperature-cold" />
-              {coldVotes}
+              <Snowflake className="h-3 w-3 text-temperature-cold" aria-hidden="true" />
+              <span aria-label={`${coldVotes} votos frios`}>{coldVotes}</span>
             </span>
           </div>
           <Button
@@ -110,11 +119,13 @@ export function Thermometer({
             size="icon"
             className={cn(
               'rounded-full hover:bg-temperature-cold/20 hover:text-temperature-cold transition-all',
+              'focus:ring-2 focus:ring-primary focus:ring-offset-2',
               styles.button
             )}
             onClick={onVoteCold}
+            aria-label={`Votar frio. Atualmente ${coldVotes} votos frios.`}
           >
-            <Snowflake className={styles.icon} />
+            <Snowflake className={styles.icon} aria-hidden="true" />
           </Button>
         </div>
       )}

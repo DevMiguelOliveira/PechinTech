@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { Flame, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
@@ -100,6 +101,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <SEO
+        title="Login"
+        description="Entre ou crie sua conta no PechinTech para salvar favoritos, votar em promoções e comentar."
+        url="/auth"
+        noindex
+      />
+      
       <div className="w-full max-w-md">
         <Button
           variant="ghost"

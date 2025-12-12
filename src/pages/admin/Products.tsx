@@ -48,6 +48,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 
 const emptyForm: ProductFormData = {
   title: '',
@@ -280,6 +281,12 @@ const Products = () => {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title="Painel Administrativo - Produtos"
+        description="Gerencie produtos e promoções no painel administrativo do PechinTech"
+        url="/admin/products"
+        noindex
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Produtos</h1>
