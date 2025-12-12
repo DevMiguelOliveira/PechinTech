@@ -6,15 +6,16 @@ export interface DbCategory {
   id: string;
   name: string;
   slug: string;
-  icon: string;
+  parent_id: string | null;
   created_at: string;
   updated_at: string;
+  parent?: DbCategory | null;
 }
 
 export interface CategoryFormData {
   name: string;
   slug: string;
-  icon: string;
+  parent_id: string | null;
 }
 
 export function useCategories() {
@@ -23,7 +24,14 @@ export function useCategories() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select(`
+          *,
+          parent:parent_id (
+            id,
+            name,
+            slug
+          )
+        `)
         .order('name');
 
       if (error) throw error;
@@ -31,6 +39,27 @@ export function useCategories() {
     },
     staleTime: 0, // Sempre buscar dados atualizados
     refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
+  });
+}
+
+/**
+ * Hook para buscar apenas categorias raiz (sem parent)
+ */
+export function useRootCategories() {
+  return useQuery({
+    queryKey: ['categories', 'root'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .is('parent_id', null)
+        .order('name');
+
+      if (error) throw error;
+      return data as DbCategory[];
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
 

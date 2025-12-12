@@ -49,35 +49,13 @@ import {
   Pencil,
   Trash2,
   Loader2,
-  Cpu,
-  Mouse,
-  Smartphone,
-  Gamepad2,
-  Monitor,
-  Laptop,
-  Package,
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { getCategoryIcon } from '@/lib/categoryIcons';
-
-const iconOptions = [
-  { value: 'Cpu', label: 'CPU', Icon: Cpu },
-  { value: 'Mouse', label: 'Mouse', Icon: Mouse },
-  { value: 'Smartphone', label: 'Smartphone', Icon: Smartphone },
-  { value: 'Gamepad2', label: 'Gamepad', Icon: Gamepad2 },
-  { value: 'Monitor', label: 'Monitor', Icon: Monitor },
-  { value: 'Laptop', label: 'Laptop', Icon: Laptop },
-  { value: 'Package', label: 'Pacote', Icon: Package },
-];
-
-const getIconComponent = (iconName: string) => {
-  return getCategoryIcon(iconName);
-};
 
 const emptyForm: CategoryFormData = {
   name: '',
   slug: '',
-  icon: 'Package',
+  parent_id: null,
 };
 
 const CategoryForm = ({
@@ -85,13 +63,21 @@ const CategoryForm = ({
   onSubmit,
   isLoading,
   onCancel,
+  excludeCategoryId,
 }: {
   initialData: CategoryFormData;
   onSubmit: (data: CategoryFormData) => void;
   isLoading: boolean;
   onCancel: () => void;
+  excludeCategoryId?: string; // Para evitar que uma categoria seja pai de si mesma
 }) => {
   const [form, setForm] = useState(initialData);
+  const { data: allCategories } = useCategories();
+
+  // Filtrar categorias disponíveis para serem pais (excluir a própria categoria se estiver editando)
+  const availableParentCategories = allCategories?.filter(
+    (cat) => cat.id !== excludeCategoryId
+  ) || [];
 
   const handleNameChange = (name: string) => {
     const slug = name
@@ -116,37 +102,48 @@ const CategoryForm = ({
           id="name"
           value={form.name}
           onChange={(e) => handleNameChange(e.target.value)}
+          placeholder="Ex: Processadores"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="slug">Slug (URL)</Label>
+        <Label htmlFor="slug">Slug (URL) *</Label>
         <Input
           id="slug"
           value={form.slug}
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          placeholder="Ex: processadores"
           required
         />
+        <p className="text-xs text-muted-foreground">
+          URL amigável para a categoria (ex: processadores, placas-de-video)
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="icon">Ícone</Label>
-        <Select value={form.icon} onValueChange={(value) => setForm({ ...form, icon: value })}>
+        <Label htmlFor="parent_id">Categoria Pai (Opcional)</Label>
+        <Select
+          value={form.parent_id || ''}
+          onValueChange={(value) => setForm({ ...form, parent_id: value || null })}
+        >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione um ícone" />
+            <SelectValue placeholder="Selecione uma categoria pai para criar subcategoria" />
           </SelectTrigger>
           <SelectContent>
-            {iconOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                <div className="flex items-center gap-2">
-                  <option.Icon className="h-4 w-4" />
-                  {option.label}
-                </div>
-              </SelectItem>
-            ))}
+            <SelectItem value="">Nenhuma (Categoria Principal)</SelectItem>
+            {availableParentCategories
+              .filter((cat) => !cat.parent_id) // Apenas categorias raiz podem ser pais
+              .map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          Deixe em branco para criar uma categoria principal. Selecione uma categoria para criar uma subcategoria.
+        </p>
       </div>
 
       <div className="flex gap-2 pt-4">
@@ -227,6 +224,7 @@ const Categories = () => {
               onSubmit={handleCreate}
               isLoading={createCategory.isPending}
               onCancel={() => setIsCreateOpen(false)}
+              excludeCategoryId={undefined}
             />
           </DialogContent>
         </Dialog>
@@ -250,25 +248,37 @@ const Categories = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[60px]">Ícone</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead className="hidden sm:table-cell">Slug</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoria Pai</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {categories?.map((category) => {
-                    const IconComponent = getIconComponent(category.icon);
+                    const isSubcategory = !!category.parent_id;
                     return (
-                      <TableRow key={category.id}>
-                        <TableCell>
-                          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <IconComponent className="h-5 w-5 text-primary" />
+                      <TableRow key={category.id} className={isSubcategory ? 'bg-muted/30' : ''}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {isSubcategory && (
+                              <span className="text-xs text-muted-foreground">└─</span>
+                            )}
+                            <span>{category.name}</span>
+                            {isSubcategory && (
+                              <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                Subcategoria
+                              </span>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{category.name}</TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {category.slug}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">
+                          {category.parent?.name || (
+                            <span className="text-muted-foreground/50">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
@@ -276,6 +286,7 @@ const Categories = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => setEditingCategory(category)}
+                              aria-label={`Editar categoria ${category.name}`}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -283,6 +294,7 @@ const Categories = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => setDeletingCategory(category)}
+                              aria-label={`Excluir categoria ${category.name}`}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -309,11 +321,12 @@ const Categories = () => {
               initialData={{
                 name: editingCategory.name,
                 slug: editingCategory.slug,
-                icon: editingCategory.icon,
+                parent_id: editingCategory.parent_id || null,
               }}
               onSubmit={handleUpdate}
               isLoading={updateCategory.isPending}
               onCancel={() => setEditingCategory(null)}
+              excludeCategoryId={editingCategory.id}
             />
           )}
         </DialogContent>

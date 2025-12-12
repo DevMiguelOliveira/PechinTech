@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, ExternalLink, Store, MessageCircle, Send, User } from 'lucide-react';
+import { X, ExternalLink, Store, MessageCircle, Send, User, AlertCircle } from 'lucide-react';
+import { validateCommentContent } from '@/utils/contentModeration';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ export function ProductDetailModal({
   onAddComment,
 }: ProductDetailModalProps) {
   const [newComment, setNewComment] = useState('');
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   if (!product) return null;
 
@@ -48,11 +50,40 @@ export function ProductDetailModal({
     });
   };
 
-  const handleSubmitComment = () => {
-    if (newComment.trim()) {
-      onAddComment(newComment.trim());
-      setNewComment('');
+  const handleCommentChange = (value: string) => {
+    setNewComment(value);
+    
+    // Limpar erro quando o usuário começar a digitar novamente
+    if (commentError) {
+      setCommentError(null);
     }
+
+    // Validação em tempo real para feedback imediato
+    if (value.trim().length > 0) {
+      const validation = validateCommentContent(value);
+      if (!validation.isValid && validation.error) {
+        setCommentError(validation.error);
+      }
+    }
+  };
+
+  const handleSubmitComment = () => {
+    const trimmedComment = newComment.trim();
+    
+    if (!trimmedComment) {
+      setCommentError('O comentário não pode estar vazio.');
+      return;
+    }
+
+    const validation = validateCommentContent(trimmedComment);
+    if (!validation.isValid) {
+      setCommentError(validation.error || 'Conteúdo inválido');
+      return;
+    }
+
+    onAddComment(trimmedComment);
+    setNewComment('');
+    setCommentError(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -180,25 +211,54 @@ export function ProductDetailModal({
                 </h4>
 
                 {/* Add Comment */}
-                <div className="flex gap-2 mb-4">
-                  <Input
-                    placeholder="Adicionar um comentário..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
-                    className="bg-surface-elevated border-border/50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Campo de comentário"
-                  />
-                  <Button
-                    variant="default"
-                    size="icon"
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim()}
-                    aria-label="Enviar comentário"
-                    className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  >
-                    <Send className="h-4 w-4" aria-hidden="true" />
-                  </Button>
+                <div className="space-y-2 mb-4">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Adicionar um comentário..."
+                        value={newComment}
+                        onChange={(e) => handleCommentChange(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitComment();
+                          }
+                        }}
+                        className={`
+                          bg-surface-elevated border-border/50 
+                          focus:ring-2 focus:ring-primary focus:ring-offset-2
+                          ${commentError ? 'border-destructive focus:ring-destructive' : ''}
+                        `}
+                        aria-label="Campo de comentário"
+                        maxLength={1000}
+                        aria-invalid={!!commentError}
+                        aria-describedby={commentError ? 'comment-error' : undefined}
+                      />
+                      {commentError && (
+                        <div 
+                          id="comment-error"
+                          className="flex items-center gap-1.5 mt-1.5 text-sm text-destructive"
+                          role="alert"
+                        >
+                          <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          <span>{commentError}</span>
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground mt-1 text-right">
+                        {newComment.length}/1000 caracteres
+                      </div>
+                    </div>
+                    <Button
+                      variant="default"
+                      size="icon"
+                      onClick={handleSubmitComment}
+                      disabled={!newComment.trim() || !!commentError}
+                      aria-label="Enviar comentário"
+                      className="focus:ring-2 focus:ring-primary focus:ring-offset-2 shrink-0"
+                    >
+                      <Send className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Comments List */}

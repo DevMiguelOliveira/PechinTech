@@ -305,3 +305,4 @@ Para conectar um domínio customizado, siga as instruções da plataforma escolh
 
 **Precisa de ajuda?** Abra uma issue no repositório ou consulte a documentação da plataforma escolhida.
 
+

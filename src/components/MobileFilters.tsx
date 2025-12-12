@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, Flame, Clock, MessageCircle } from 'lucide-react';
+import { Filter, Flame, Clock, MessageCircle, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,8 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Category, SortOption } from '@/types';
 import { cn } from '@/lib/utils';
-import { useCategories } from '@/hooks/useCategories';
-import { getCategoryIcon } from '@/lib/categoryIcons';
+import { useCategories, DbCategory } from '@/hooks/useCategories';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const sortOptions = [
@@ -29,6 +28,23 @@ interface MobileFiltersProps {
   onSelectSort: (sort: SortOption) => void;
 }
 
+// Organiza categorias em hierarquia
+function organizeCategoriesHierarchy(categories: DbCategory[]) {
+  const rootCategories = categories.filter((cat) => !cat.parent_id);
+  const subcategoriesMap = new Map<string, DbCategory[]>();
+
+  categories.forEach((cat) => {
+    if (cat.parent_id) {
+      if (!subcategoriesMap.has(cat.parent_id)) {
+        subcategoriesMap.set(cat.parent_id, []);
+      }
+      subcategoriesMap.get(cat.parent_id)!.push(cat);
+    }
+  });
+
+  return { rootCategories, subcategoriesMap };
+}
+
 export function MobileFilters({
   selectedCategory,
   onSelectCategory,
@@ -37,8 +53,23 @@ export function MobileFilters({
 }: MobileFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  const { rootCategories, subcategoriesMap } = organizeCategoriesHierarchy(
+    categories || []
+  );
 
   const activeFiltersCount = (selectedCategory ? 1 : 0) + (selectedSort !== 'hottest' ? 1 : 0);
+
+  const toggleCategory = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
 
   return (
     <div className="lg:hidden sticky top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
@@ -103,7 +134,7 @@ export function MobileFilters({
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3">
                     Categorias
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-2">
                     <Button
                       variant={selectedCategory === null ? 'default' : 'outline'}
                       size="sm"
@@ -113,38 +144,91 @@ export function MobileFilters({
                       }}
                       aria-pressed={selectedCategory === null}
                       aria-label="Mostrar todas as categorias"
-                      className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="w-full focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     >
-                      Todas
+                      Todas as categorias
                     </Button>
                     {categoriesLoading ? (
-                      <>
+                      <div className="space-y-2">
                         {[...Array(4)].map((_, i) => (
-                          <Skeleton key={i} className="h-8 w-20" />
+                          <Skeleton key={i} className="h-8 w-full" />
                         ))}
-                      </>
+                      </div>
                     ) : (
-                      categories?.map((category) => {
-                        const Icon = getCategoryIcon(category.icon);
-                        const isSelected = selectedCategory === category.slug;
-                        return (
-                          <Button
-                            key={category.id}
-                            variant={isSelected ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => {
-                              onSelectCategory(category.slug as Category);
-                              setIsOpen(false);
-                            }}
-                            aria-pressed={isSelected}
-                            aria-label={`Filtrar por ${category.name}`}
-                            className="focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                          >
-                            <Icon className="h-4 w-4 mr-2 shrink-0" aria-hidden="true" />
-                            {category.name}
-                          </Button>
-                        );
-                      })
+                      <div className="space-y-1">
+                        {rootCategories.map((category) => {
+                          const isSelected = selectedCategory === category.slug;
+                          const hasSubcategories = subcategoriesMap.has(category.id);
+                          const isExpanded = expandedCategories.has(category.id);
+                          const subcategories = subcategoriesMap.get(category.id) || [];
+
+                          return (
+                            <div key={category.id} className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                {hasSubcategories && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 p-0"
+                                    onClick={() => toggleCategory(category.id)}
+                                    aria-label={isExpanded ? 'Recolher' : 'Expandir'}
+                                  >
+                                    <ChevronRight
+                                      className={cn(
+                                        'h-3 w-3 transition-transform',
+                                        isExpanded && 'rotate-90'
+                                      )}
+                                      aria-hidden="true"
+                                    />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant={isSelected ? 'default' : 'outline'}
+                                  size="sm"
+                                  className={cn(
+                                    'flex-1 justify-start',
+                                    'focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                                    !hasSubcategories && 'ml-9'
+                                  )}
+                                  onClick={() => {
+                                    onSelectCategory(category.slug as Category);
+                                  }}
+                                  aria-pressed={isSelected}
+                                  aria-label={`Filtrar por ${category.name}`}
+                                >
+                                  {category.name}
+                                </Button>
+                              </div>
+                              {hasSubcategories && isExpanded && (
+                                <div className="ml-9 space-y-1">
+                                  {subcategories.map((subcategory) => {
+                                    const isSubSelected = selectedCategory === subcategory.slug;
+                                    return (
+                                      <Button
+                                        key={subcategory.id}
+                                        variant={isSubSelected ? 'default' : 'outline'}
+                                        size="sm"
+                                        className={cn(
+                                          'w-full justify-start text-sm',
+                                          'focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                                        )}
+                                        onClick={() => {
+                                          onSelectCategory(subcategory.slug as Category);
+                                        }}
+                                        aria-pressed={isSubSelected}
+                                        aria-label={`Filtrar por ${subcategory.name}`}
+                                      >
+                                        <span className="text-muted-foreground mr-2">└─</span>
+                                        {subcategory.name}
+                                      </Button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -152,10 +236,9 @@ export function MobileFilters({
             </SheetContent>
           </Sheet>
 
-          {/* Quick Category Pills */}
+          {/* Quick Category Pills - Apenas categorias raiz */}
           {!categoriesLoading &&
-            categories?.slice(0, 4).map((category) => {
-              const Icon = getCategoryIcon(category.icon);
+            rootCategories.slice(0, 4).map((category) => {
               const isSelected = selectedCategory === category.slug;
               return (
                 <Button
@@ -171,7 +254,6 @@ export function MobileFilters({
                   aria-pressed={isSelected}
                   aria-label={`Filtrar por ${category.name}`}
                 >
-                  <Icon className="h-4 w-4 mr-1 shrink-0" aria-hidden="true" />
                   <span className="truncate max-w-[100px]">{category.name}</span>
                 </Button>
               );
