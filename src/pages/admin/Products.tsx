@@ -48,7 +48,9 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Loader2, Wand2, Link, CheckCircle2, AlertCircle } from 'lucide-react';
+import { fetchLinkPreview } from '@/services/linkPreview';
+import { toast } from '@/hooks/use-toast';
 
 const emptyForm: ProductFormData = {
   title: '',
@@ -103,6 +105,59 @@ const ProductForm = ({
   // Estados para os campos de preço formatados
   const [currentPriceText, setCurrentPriceText] = useState(formatBRL(initialData.current_price));
   const [originalPriceText, setOriginalPriceText] = useState(formatBRL(initialData.original_price));
+  
+  // Estado para busca automática via Link Preview API
+  const [isFetchingPreview, setIsFetchingPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(initialData.affiliate_url || '');
+  
+  // Função para buscar informações do link automaticamente
+  const handleFetchLinkPreview = async () => {
+    if (!previewUrl.trim()) {
+      toast({
+        title: 'URL não informada',
+        description: 'Cole a URL do produto para buscar informações automaticamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setIsFetchingPreview(true);
+    
+    try {
+      const result = await fetchLinkPreview(previewUrl);
+      
+      if (result.success && result.data) {
+        // Atualiza os campos do formulário com os dados extraídos
+        setForm((prev) => ({
+          ...prev,
+          title: result.data!.title || prev.title,
+          description: result.data!.description || prev.description,
+          image_url: result.data!.image || prev.image_url,
+          affiliate_url: previewUrl,
+          store: result.data!.siteName || prev.store,
+        }));
+        
+        toast({
+          title: 'Dados extraídos com sucesso!',
+          description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
+        });
+      } else {
+        toast({
+          title: 'Não foi possível extrair',
+          description: result.error || 'Tente preencher os campos manualmente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro na busca',
+        description: 'Ocorreu um erro ao buscar informações. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFetchingPreview(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +176,49 @@ const ProductForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
+      {/* Seção de Busca Automática via Link Preview */}
+      <div className="sm:col-span-2 p-2.5 sm:p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Wand2 className="h-3.5 w-3.5 text-primary" />
+          <Label className="text-[10px] sm:text-xs font-medium text-primary">Preenchimento Automático</Label>
+        </div>
+        <p className="text-[9px] sm:text-[10px] text-muted-foreground">
+          Cole a URL do produto e clique em "Buscar" para preencher os campos automaticamente.
+        </p>
+        <div className="flex gap-1.5">
+          <div className="relative flex-1">
+            <Link className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <Input
+              type="url"
+              placeholder="https://www.loja.com.br/produto..."
+              value={previewUrl}
+              onChange={(e) => setPreviewUrl(e.target.value)}
+              className="h-7 sm:h-8 text-[11px] sm:text-xs pl-7"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={handleFetchLinkPreview}
+            disabled={isFetchingPreview || !previewUrl.trim()}
+            className="h-7 sm:h-8 px-2.5 sm:px-3 text-[10px] sm:text-xs whitespace-nowrap"
+          >
+            {isFetchingPreview ? (
+              <>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                Buscando...
+              </>
+            ) : (
+              <>
+                <Wand2 className="mr-1 h-3 w-3" />
+                Buscar
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-1.5 sm:gap-2 grid-cols-1 sm:grid-cols-2">
         {/* Título */}
         <div className="sm:col-span-2 space-y-0.5">
@@ -204,7 +302,10 @@ const ProductForm = ({
             id="affiliate_url"
             type="url"
             value={form.affiliate_url}
-            onChange={(e) => setForm({ ...form, affiliate_url: e.target.value })}
+            onChange={(e) => {
+              setForm({ ...form, affiliate_url: e.target.value });
+              setPreviewUrl(e.target.value);
+            }}
             required
             className="h-7 sm:h-8 text-[11px] sm:text-xs"
           />

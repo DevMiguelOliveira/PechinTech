@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Comment } from '@/types';
+import { trackComment } from '@/services/analytics';
 
 interface DbComment {
   id: string;
@@ -114,6 +115,10 @@ export function useAddComment() {
       queryClient.invalidateQueries({ queryKey: ['comments', variables.productId] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['active-products'] });
+      
+      // Analytics: tracking de comentário
+      trackComment(variables.productId);
+      
       toast({
         title: 'Comentário adicionado!',
         description: 'Seu comentário foi publicado.',

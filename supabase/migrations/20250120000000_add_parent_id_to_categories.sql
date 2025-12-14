@@ -14,3 +14,4 @@ COMMENT ON COLUMN public.categories.parent_id IS 'Referência à categoria pai. 
 
 
 
+

@@ -6,6 +6,7 @@ import { Thermometer } from '@/components/Thermometer';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { trackPromoClick, trackCouponCopy, trackShare, trackProductView } from '@/services/analytics';
 
 interface ProductCardProps {
   product: Product;
@@ -55,6 +56,8 @@ export function ProductCard({
           title: 'Cupom copiado!',
           description: `Código "${product.coupon_code}" copiado para a área de transferência.`,
         });
+        // Analytics: tracking de cópia de cupom
+        trackCouponCopy(product.id, product.coupon_code);
         setTimeout(() => setCopied(false), 2000);
       } catch {
         toast({
@@ -86,11 +89,34 @@ export function ProductCard({
     message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
     message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_`;
     
+    // Analytics: tracking de compartilhamento
+    trackShare(product.id, 'whatsapp');
+    
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
   const handleCardClick = () => {
+    // Analytics: tracking de visualização de produto
+    trackProductView({
+      id: product.id,
+      title: product.title,
+      price: product.current_price,
+      category: product.category,
+    });
     onOpenDetails(product);
+  };
+  
+  const handlePromoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Analytics: tracking de clique no link de afiliado
+    trackPromoClick({
+      id: product.id,
+      title: product.title,
+      store: product.store,
+      price: product.current_price,
+      category: product.category,
+    });
+    window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -219,10 +245,7 @@ export function ProductCard({
           <Button
             variant="neon"
             className="w-full text-[10px] sm:text-xs h-8 sm:h-9 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
-            }}
+            onClick={handlePromoClick}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
             <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mr-1" aria-hidden="true" />

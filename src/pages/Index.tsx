@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
@@ -16,6 +16,7 @@ import { useComments, useAddComment, useDeleteComment } from '@/hooks/useComment
 import { Product, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { trackSearch, trackCategoryFilter } from '@/services/analytics';
 
 // Transform DB product to UI product
 const mapDbProductToProduct = (p: DbProduct): Product => ({
@@ -67,6 +68,10 @@ const Index = () => {
   const addComment = useAddComment();
   const deleteComment = useDeleteComment();
 
+  // Ref para debounce de busca no analytics
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const prevCategoryRef = useRef<Category | null>(null);
+
   // Filtered and sorted products
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -104,6 +109,31 @@ const Index = () => {
 
     return result;
   }, [products, searchQuery, selectedCategory, selectedSort]);
+
+  // Analytics: tracking de busca (com debounce de 1 segundo)
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      searchTimeoutRef.current = setTimeout(() => {
+        trackSearch(searchQuery, filteredProducts.length);
+      }, 1000);
+    }
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, filteredProducts.length]);
+
+  // Analytics: tracking de filtro por categoria
+  useEffect(() => {
+    if (selectedCategory && selectedCategory !== prevCategoryRef.current) {
+      trackCategoryFilter(selectedCategory);
+    }
+    prevCategoryRef.current = selectedCategory;
+  }, [selectedCategory]);
 
   // Trending products (top 4 by temperature)
   const trendingProducts = useMemo(() => {

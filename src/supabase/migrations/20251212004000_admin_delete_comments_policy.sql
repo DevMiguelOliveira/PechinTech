@@ -22,3 +22,4 @@ CREATE POLICY "Admins can delete any comment" ON comments
 -- Ensure RLS is enabled on comments table
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
+

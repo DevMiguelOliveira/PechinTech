@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { trackFavorite } from '@/services/analytics';
 
 export function useFavorites() {
   const { user } = useAuth();
@@ -60,6 +61,10 @@ export function useToggleFavorite() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      
+      // Analytics: tracking de favorito
+      trackFavorite(result.productId, result.action === 'added' ? 'add' : 'remove');
+      
       toast({
         title: result.action === 'added' ? 'Adicionado aos favoritos' : 'Removido dos favoritos',
         description: result.action === 'added' 

@@ -10,6 +10,7 @@ import { SEO } from '@/components/SEO';
 import { toast } from '@/hooks/use-toast';
 import { Flame, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { trackAuth } from '@/services/analytics';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres');
@@ -61,6 +62,9 @@ const Auth = () => {
         variant: 'destructive',
       });
     } else {
+      // Analytics: tracking de login
+      trackAuth('login');
+      
       toast({
         title: 'Bem-vindo!',
         description: 'Login realizado com sucesso.',
@@ -92,6 +96,9 @@ const Auth = () => {
         });
       }
     } else {
+      // Analytics: tracking de cadastro
+      trackAuth('signup');
+      
       toast({
         title: 'Conta criada!',
         description: 'Verifique seu email para confirmar o cadastro.',

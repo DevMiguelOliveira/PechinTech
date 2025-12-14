@@ -1,5 +1,4 @@
-import { FolderTree, Flame, Clock, MessageCircle, Filter, ChevronRight, Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { FolderTree, Flame, Clock, MessageCircle, Filter, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 
 const sortOptions = [
+  { id: 'hottest', name: 'Mais Quentes', icon: Flame },
   { id: 'newest', name: 'Mais Recentes', icon: Clock },
   { id: 'commented', name: 'Mais Comentados', icon: MessageCircle },
 ] as const;
@@ -47,8 +47,14 @@ export function Sidebar({
   onSelectSort,
   className,
 }: SidebarProps) {
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  // #region agent log
+  if (categoriesError) {
+    fetch('http://127.0.0.1:7242/ingest/93008681-2cd6-434f-a333-e54b0eca1ade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/Sidebar.tsx:50',message:'Categories error in Sidebar',data:{errorMessage:categoriesError?.message,errorStack:categoriesError?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
+  }
+  // #endregion
 
   const { rootCategories, subcategoriesMap } = organizeCategoriesHierarchy(
     categories || []
@@ -67,28 +73,12 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] shrink-0 border-r border-border/50 bg-sidebar hidden lg:block z-30',
+        'w-64 shrink-0 border-r border-border/50 bg-sidebar hidden lg:block',
         className
       )}
     >
-      <ScrollArea className="h-full">
+      <ScrollArea className="h-[calc(100vh-4rem)]">
         <div className="p-4 space-y-6">
-          {/* Home Button */}
-          <Link
-            to="/"
-            onClick={() => {
-              onSelectCategory(null);
-              onSelectSort('hottest');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-          >
-            <Home className="h-4 w-4" />
-            Home
-          </Link>
-
-          <Separator className="bg-border/50" />
-
           {/* Sort Section */}
           <div>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-3">

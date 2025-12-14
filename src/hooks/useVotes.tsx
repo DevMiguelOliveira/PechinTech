@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { trackVote } from '@/services/analytics';
 
 export function useVotes(productId?: string) {
   const { user } = useAuth();
@@ -136,10 +137,15 @@ export function useVote() {
         return { action: 'added' as const, voteType };
       }
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['votes'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['active-products'] });
+      
+      // Analytics: tracking de voto
+      if (result.action === 'added' || result.action === 'changed') {
+        trackVote(variables.productId, result.voteType);
+      }
       
       const messages = {
         hot: {
