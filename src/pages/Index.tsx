@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { HeroSection } from '@/components/HeroSection';
+import { BannerGrupos } from '@/components/BannerGrupos';
 import { ProductGrid } from '@/components/ProductGrid';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { MobileFilters } from '@/components/MobileFilters';
@@ -252,6 +253,11 @@ const Index = () => {
               </div>
             ) : (
               <>
+                {/* Banner Grupos */}
+                {!searchQuery && !selectedCategory && trendingProducts.length > 0 && (
+                  <BannerGrupos />
+                )}
+
                 {/* Hero Section - Trending Products */}
                 {!searchQuery && !selectedCategory && trendingProducts.length > 0 && (
                   <HeroSection
