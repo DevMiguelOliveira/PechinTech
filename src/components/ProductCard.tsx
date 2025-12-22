@@ -176,26 +176,26 @@ export function ProductCard({
       <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1.5 sm:gap-2">
         {/* Store Badge */}
         <div className="flex items-center gap-1 flex-wrap">
-          <Badge variant="outline" className="text-[9px] sm:text-[10px] font-normal px-1.5 py-0">
+          <Badge variant="outline" className="text-[10px] sm:text-[11px] font-normal px-1.5 py-0">
             <Store className="h-2.5 w-2.5 mr-0.5" />
             {product.store}
           </Badge>
-          <Badge variant="secondary" className="text-[9px] sm:text-[10px] font-normal capitalize px-1.5 py-0">
+          <Badge variant="secondary" className="text-[10px] sm:text-[11px] font-normal capitalize px-1.5 py-0">
             {product.category}
           </Badge>
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-[11px] sm:text-xs line-clamp-2 hover:text-primary transition-colors leading-snug min-h-[2.5em]">
+        <h3 className="font-semibold text-[12px] sm:text-sm line-clamp-2 hover:text-primary transition-colors leading-snug min-h-[2.5em]">
           {product.title}
         </h3>
 
         {/* Price */}
         <div className="flex flex-col">
-          <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through leading-none">
+          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through leading-none">
             {formatPrice(product.original_price)}
           </span>
-          <span className="text-sm sm:text-lg font-bold text-primary leading-tight">
+          <span className="text-base sm:text-lg font-bold text-primary leading-tight">
             {formatPrice(product.current_price)}
           </span>
         </div>
@@ -219,7 +219,7 @@ export function ProductCard({
               className={cn(
                 "w-full flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-md",
                 "bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors",
-                "text-[9px] sm:text-[10px] font-medium"
+                "text-[10px] sm:text-[11px] font-medium"
               )}
             >
               <span className="text-muted-foreground">Cupom:</span>
@@ -235,7 +235,7 @@ export function ProductCard({
           )}
           
           {/* Published Date */}
-          <p className="text-[8px] sm:text-[9px] text-muted-foreground text-center leading-tight">
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center leading-tight">
             Publicado em {formatDate(product.created_at)}. Valores sujeitos a alteração.
           </p>
 
@@ -254,7 +254,7 @@ export function ProductCard({
           <div className="flex items-center justify-center gap-1.5">
             <div className="flex items-center gap-0.5 text-muted-foreground">
               <MessageCircle className="h-2.5 w-2.5" aria-hidden="true" />
-              <span className="text-[8px] sm:text-[9px]">{product.comments_count}</span>
+              <span className="text-[9px] sm:text-[10px]">{product.comments_count}</span>
             </div>
             <Button
               variant="outline"

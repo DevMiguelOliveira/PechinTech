@@ -104,7 +104,7 @@ export function Thermometer({
           >
             <Flame className={styles.icon} aria-hidden="true" />
           </Button>
-          <div className="flex items-center gap-2 text-[9px] sm:text-[10px] text-muted-foreground" aria-live="polite" aria-atomic="true">
+          <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground" aria-live="polite" aria-atomic="true">
             <span className="flex items-center gap-0.5">
               <Flame className="h-2.5 w-2.5 text-temperature-hot" aria-hidden="true" />
               <span aria-label={`${hotVotes} votos quentes`}>{hotVotes}</span>

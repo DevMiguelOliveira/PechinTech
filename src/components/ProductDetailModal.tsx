@@ -94,7 +94,7 @@ export function ProductDetailModal({
             loading="eager"
           />
           {discount > 0 && (
-            <Badge className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold px-1.5 py-0.5">
+            <Badge className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[11px] sm:text-sm font-bold px-1.5 py-0.5">
               -{discount}%
             </Badge>
           )}
