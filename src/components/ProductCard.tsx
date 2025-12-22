@@ -253,17 +253,17 @@ export function ProductCard({
           {/* Secondary Actions */}
           <div className="flex items-center justify-center gap-1.5">
             <div className="flex items-center gap-0.5 text-muted-foreground">
-              <MessageCircle className="h-2.5 w-2.5" aria-hidden="true" />
-              <span className="text-[9px] sm:text-[10px]">{product.comments_count}</span>
+              <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+              <span className="text-[10px] sm:text-[11px]">{product.comments_count}</span>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
+              className="h-7 px-2 text-[10px] sm:text-[11px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
               onClick={handleShareWhatsApp}
               aria-label={`Compartilhar ${product.title} no WhatsApp`}
             >
-              <Share2 className="h-3 w-3 mr-1" aria-hidden="true" />
+              <Share2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
               Compartilhar
             </Button>
           </div>

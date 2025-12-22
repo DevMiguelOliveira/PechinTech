@@ -185,7 +185,7 @@ export function ProductDetailModal({
           <Separator className="bg-border/50" />
           <div>
             <h4 className="text-[11px] sm:text-sm font-semibold mb-1.5 flex items-center gap-1">
-              <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               Comentários ({comments.length})
             </h4>
 
