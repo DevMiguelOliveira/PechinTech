@@ -146,7 +146,7 @@ export function ProductCard({
           'absolute top-2 right-2 z-10 rounded-full bg-background/80 backdrop-blur-sm',
           'hover:bg-background hover:scale-110 transition-all',
           'focus:ring-2 focus:ring-primary focus:ring-offset-2',
-          'h-7 w-7',
+          'h-8 w-8 sm:h-7 sm:w-7',
           isFavorite && 'text-primary'
         )}
         onClick={(e) => {
@@ -155,7 +155,7 @@ export function ProductCard({
         }}
         aria-label={isFavorite ? `Remover ${product.title} dos favoritos` : `Adicionar ${product.title} aos favoritos`}
       >
-        <Heart className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} aria-hidden="true" />
+        <Heart className={cn('h-4 w-4 sm:h-3.5 sm:h-3.5', isFavorite && 'fill-current')} aria-hidden="true" />
       </Button>
 
       {/* Product Image */}
@@ -217,7 +217,7 @@ export function ProductCard({
             <button
               onClick={handleCopyCoupon}
               className={cn(
-                "w-full flex items-center justify-between gap-1 px-2 py-1 rounded-md",
+                "w-full flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-md",
                 "bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors",
                 "text-[9px] sm:text-[10px] font-medium"
               )}

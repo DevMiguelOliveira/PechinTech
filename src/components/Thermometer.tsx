@@ -42,8 +42,8 @@ export function Thermometer({
       container: 'gap-0.5',
       temp: 'text-sm sm:text-base font-bold',
       bar: 'h-1',
-      button: 'h-6 w-6',
-      icon: 'h-2.5 w-2.5',
+      button: 'h-7 w-7 sm:h-6 sm:w-6',
+      icon: 'h-3 w-3 sm:h-2.5 sm:w-2.5',
     },
     md: {
       container: 'gap-2',
