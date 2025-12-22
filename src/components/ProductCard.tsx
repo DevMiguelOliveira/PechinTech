@@ -242,11 +242,11 @@ export function ProductCard({
           {/* Main Button */}
           <Button
             variant="neon"
-            className="w-full text-[9px] sm:text-[10px] h-7 sm:h-8 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="w-full text-[10px] sm:text-[11px] h-8 sm:h-9 px-3 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={handlePromoClick}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
-            <ExternalLink className="h-3 w-3 shrink-0 mr-1" aria-hidden="true" />
+            <ExternalLink className="h-3.5 w-3.5 shrink-0 mr-1.5" aria-hidden="true" />
             Pegar Promoção!
           </Button>
           
@@ -259,11 +259,11 @@ export function ProductCard({
             <Button
               variant="outline"
               size="sm"
-              className="h-6 px-1.5 text-[8px] sm:text-[9px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
+              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
               onClick={handleShareWhatsApp}
               aria-label={`Compartilhar ${product.title} no WhatsApp`}
             >
-              <Share2 className="h-2.5 w-2.5 mr-0.5" aria-hidden="true" />
+              <Share2 className="h-3 w-3 mr-1" aria-hidden="true" />
               Compartilhar
             </Button>
           </div>

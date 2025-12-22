@@ -196,16 +196,16 @@ export function ProductDetailModal({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
-                className="bg-surface-elevated border-border/50 text-[10px] sm:text-xs h-6 sm:h-7"
+                className="bg-surface-elevated border-border/50 text-[10px] sm:text-xs h-7 sm:h-8"
               />
               <Button
                 variant="default"
                 size="icon"
                 onClick={handleSubmitComment}
                 disabled={!newComment.trim()}
-                className="h-6 w-6 sm:h-7 sm:w-7 shrink-0"
+                className="h-7 w-7 sm:h-8 sm:w-8 shrink-0"
               >
-                <Send className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <Send className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </Button>
             </div>
 
