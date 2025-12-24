@@ -46,3 +46,4 @@ if (Test-Path $envFile) {
     Write-Host "Crie o arquivo .env na raiz do projeto com as variáveis necessárias." -ForegroundColor Yellow
 }
 
+

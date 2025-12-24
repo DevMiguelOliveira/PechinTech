@@ -66,8 +66,19 @@ export function sanitizeText(text: string | null | undefined): string {
 export function validateAndSanitizeUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== 'string') return null;
   
+  // Remove espaços em branco
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return null;
+  
+  let urlToValidate = trimmedUrl;
+  
+  // Se a URL não começar com http:// ou https://, adiciona https://
+  if (!trimmedUrl.match(/^https?:\/\//i)) {
+    urlToValidate = `https://${trimmedUrl}`;
+  }
+  
   try {
-    const urlObj = new URL(url);
+    const urlObj = new URL(urlToValidate);
     
     // Bloqueia protocolos perigosos
     const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
@@ -82,7 +93,8 @@ export function validateAndSanitizeUrl(url: string | null | undefined): string |
     }
     
     return urlObj.href;
-  } catch {
+  } catch (error) {
+    console.warn('Erro ao validar URL:', url, error);
     return null;
   }
 }

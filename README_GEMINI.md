@@ -64,3 +64,4 @@ npm run dev
 - Confirme se a tabela `blog_posts` existe no banco de dados
 - Verifique os logs do console para mais detalhes
 
+

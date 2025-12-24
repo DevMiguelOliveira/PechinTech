@@ -36,3 +36,4 @@ VITE_GEMINI_API_KEY=AIzaSyDxtqMoWu7HpLdsUiYIytffFk91_Rz7QVQ
 
 Se mostrar isso, a chave está configurada corretamente. Apenas reinicie o servidor!
 
+

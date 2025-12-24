@@ -48,16 +48,56 @@ export function validateAffiliateUrl(url: string | null | undefined): boolean {
 /**
  * Abre link de afiliado de forma segura
  */
-export function openAffiliateUrl(url: string, fallbackUrl?: string) {
-  if (!validateAffiliateUrl(url)) {
-    console.error('URL de afiliado não permitida:', url);
-    if (fallbackUrl && validateAffiliateUrl(fallbackUrl)) {
-      openExternalUrl(fallbackUrl);
-    }
+export function openAffiliateUrl(url: string | null | undefined, fallbackUrl?: string) {
+  // Verifica se a URL está vazia ou nula
+  if (!url || url.trim() === '') {
+    console.error('[openAffiliateUrl] URL de afiliado está vazia ou não definida');
+    console.error('[openAffiliateUrl] URL recebida:', url);
     return;
   }
+
+  console.log('[openAffiliateUrl] Tentando abrir URL:', url);
+
+  // Tenta validar a URL
+  const sanitized = validateAndSanitizeUrl(url);
+  if (!sanitized) {
+    console.error('[openAffiliateUrl] URL de afiliado inválida ou malformada:', url);
+    console.error('[openAffiliateUrl] URL sanitizada:', sanitized);
+    return;
+  }
+
+  console.log('[openAffiliateUrl] URL sanitizada:', sanitized);
+
+  // Verifica se está na lista de domínios permitidos
+  const isValidDomain = validateAffiliateUrl(url);
+  console.log('[openAffiliateUrl] Domínio válido na lista permitida:', isValidDomain);
   
-  openExternalUrl(url, { noopener: true, noreferrer: true });
+  if (!isValidDomain) {
+    console.warn('[openAffiliateUrl] URL de afiliado não está na lista de domínios permitidos:', url);
+    console.warn('[openAffiliateUrl] Domínios permitidos:', ALLOWED_AFFILIATE_DOMAINS);
+    
+    // Tenta abrir mesmo assim se for uma URL válida
+    try {
+      const urlObj = new URL(sanitized);
+      console.log('[openAffiliateUrl] Hostname da URL:', urlObj.hostname);
+      
+      // Apenas bloqueia se for um protocolo perigoso
+      if (['http:', 'https:'].includes(urlObj.protocol)) {
+        console.log('[openAffiliateUrl] Abrindo URL mesmo não estando na lista de domínios permitidos');
+        openExternalUrl(sanitized, { noopener: true, noreferrer: true });
+        return;
+      } else {
+        console.error('[openAffiliateUrl] Protocolo não permitido:', urlObj.protocol);
+        return;
+      }
+    } catch (error) {
+      console.error('[openAffiliateUrl] Erro ao processar URL:', error);
+      return;
+    }
+  }
+  
+  console.log('[openAffiliateUrl] Abrindo URL válida');
+  openExternalUrl(sanitized, { noopener: true, noreferrer: true });
 }
 
 /**
@@ -84,4 +124,5 @@ export function getSafeLinkAttributes(url: string) {
     },
   };
 }
+
 
