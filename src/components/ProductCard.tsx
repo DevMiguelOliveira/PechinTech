@@ -192,71 +192,66 @@ export function ProductCard({
 
       {/* Content - Vertical Layout */}
       <div className="flex flex-col flex-1 p-4 sm:p-5 lg:p-6 gap-3 sm:gap-4 relative z-10">
-        {/* Header Section - Store, Category, Title */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge 
-              variant="outline" 
-              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 bg-background/80 backdrop-blur-sm border-primary/30"
-            >
-              <Store className="h-3 w-3 mr-1.5" />
-              {product.store}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 capitalize bg-primary/10 text-primary border-primary/20"
-            >
-              {product.category}
-            </Badge>
-          </div>
-
-          {/* Title - SEO Optimized H3 */}
-          <h3 className="font-bold text-[0.9375rem] sm:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.4] group-hover:text-primary transition-colors duration-300">
-            {product.title}
-          </h3>
-          
-          {/* Description */}
-          <p className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.5]">
-            {product.description}
-          </p>
+        {/* Header Section - Store, Category */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge 
+            variant="outline" 
+            className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 bg-background/80 backdrop-blur-sm border-primary/30"
+          >
+            <Store className="h-3 w-3 mr-1.5" />
+            {product.store}
+          </Badge>
+          <Badge 
+            variant="secondary" 
+            className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 capitalize bg-primary/10 text-primary border-primary/20"
+          >
+            {product.category}
+          </Badge>
         </div>
 
-        {/* Price & Thermometer Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Price Section */}
-          <div className="space-y-1.5">
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-through font-medium">
-                {formatPrice(product.original_price)}
-              </span>
-              {savings > 0 && (
-                <Badge variant="outline" className="text-[0.6875rem] px-2 py-0.5 bg-green-500/10 text-green-600 border-green-500/30 font-medium">
-                  Economize {formatPrice(savings)}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl lg:text-[2rem] font-black text-primary leading-[1.1] tracking-tight">
-                {formatPrice(product.current_price)}
-              </span>
-            </div>
-          </div>
+        {/* Title - SEO Optimized H3 */}
+        <h3 className="font-bold text-[0.9375rem] sm:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.4] group-hover:text-primary transition-colors duration-300">
+          {product.title}
+        </h3>
+        
+        {/* Description */}
+        <p className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.5]">
+          {product.description}
+        </p>
 
-          {/* Thermometer */}
-          <div className="flex-shrink-0">
-            <Thermometer
-              temperature={product.temperature}
-              hotVotes={product.hot_votes}
-              coldVotes={product.cold_votes}
-              onVoteHot={() => onVoteHot(product.id)}
-              onVoteCold={() => onVoteCold(product.id)}
-              size="sm"
-            />
+        {/* Price Section */}
+        <div className="space-y-1.5 py-1">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-through font-medium">
+              {formatPrice(product.original_price)}
+            </span>
+            {savings > 0 && (
+              <Badge variant="outline" className="text-[0.6875rem] px-2 py-0.5 bg-green-500/10 text-green-600 border-green-500/30 font-medium">
+                Economize {formatPrice(savings)}
+              </Badge>
+            )}
           </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl lg:text-[2rem] font-black text-primary leading-[1.1] tracking-tight">
+              {formatPrice(product.current_price)}
+            </span>
+          </div>
+        </div>
+
+        {/* Thermometer - Vertical Layout */}
+        <div className="py-2 border-t border-border/30">
+          <Thermometer
+            temperature={product.temperature}
+            hotVotes={product.hot_votes}
+            coldVotes={product.cold_votes}
+            onVoteHot={() => onVoteHot(product.id)}
+            onVoteCold={() => onVoteCold(product.id)}
+            size="sm"
+          />
         </div>
 
         {/* Bottom Section - Coupon, CTA, Actions */}
-        <div className="space-y-3 pt-2 border-t border-border/50 mt-auto">
+        <div className="space-y-3 pt-2 border-t border-border/30 mt-auto">
           {/* Coupon Code */}
           {product.coupon_code && (
             <button

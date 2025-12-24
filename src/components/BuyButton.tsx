@@ -19,37 +19,34 @@ export function BuyButton({
 }: BuyButtonProps) {
   const isHotDeal = discount >= 30;
   
-  // Tamanhos padronizados com tipografia proporcional
+  // Tamanhos padronizados com tipografia proporcional e uniforme
   const sizeClasses = {
     sm: 'h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] px-3 font-black',
     md: 'h-12 sm:h-14 text-[0.8125rem] sm:text-[0.875rem] px-3 sm:px-4 font-black',
-    lg: 'h-14 sm:h-16 text-[0.875rem] sm:text-base lg:text-[1.0625rem] px-4 sm:px-6 font-black',
+    lg: 'h-12 sm:h-14 text-[0.8125rem] sm:text-[0.875rem] px-3 sm:px-4 font-black', // Tamanho uniforme para cards
   };
 
-  // Variantes de texto responsivo
+  // Texto padronizado para todos os cards
   const getButtonText = () => {
-    if (isHotDeal) {
-      // Desktop: texto completo, Mobile: texto curto
-      if (variant === 'page') {
-        // Página individual: mais espaço, texto completo no desktop
-        return (
-          <>
-            <span className="hidden lg:inline">🔥 COMPRAR COM DESCONTO AGORA</span>
-            <span className="hidden sm:inline lg:hidden">🔥 COMPRAR COM DESCONTO</span>
-            <span className="sm:hidden">🔥 COMPRAR</span>
-          </>
-        );
-      } else {
-        // Card/Modal: texto mais curto
-        return (
-          <>
-            <span className="hidden sm:inline">🔥 COMPRAR COM DESCONTO</span>
-            <span className="sm:hidden">🔥 COMPRAR</span>
-          </>
-        );
-      }
+    // Texto único e responsivo para manter uniformidade visual
+    if (variant === 'page') {
+      // Página individual: mais espaço
+      return (
+        <>
+          <span className="hidden lg:inline">COMPRAR AGORA</span>
+          <span className="hidden sm:inline lg:hidden">COMPRAR AGORA</span>
+          <span className="sm:hidden">COMPRAR</span>
+        </>
+      );
+    } else {
+      // Card/Modal: texto padronizado
+      return (
+        <>
+          <span className="hidden sm:inline">COMPRAR AGORA</span>
+          <span className="sm:hidden">COMPRAR</span>
+        </>
+      );
     }
-    return 'COMPRAR AGORA';
   };
 
   // Ícones responsivos

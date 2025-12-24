@@ -39,11 +39,13 @@ export function Thermometer({
 
   const sizeClasses = {
     sm: {
-      container: 'gap-0.5',
-      temp: 'text-sm sm:text-base font-bold',
-      bar: 'h-1',
+      container: 'gap-1.5',
+      temp: 'text-base sm:text-lg font-bold',
+      label: 'text-[0.6875rem] sm:text-[0.75rem]',
+      bar: 'h-1.5',
       button: 'h-7 w-7 sm:h-6 sm:w-6',
       icon: 'h-3 w-3 sm:h-2.5 sm:w-2.5',
+      votes: 'text-[0.625rem] sm:text-[0.6875rem]',
     },
     md: {
       container: 'gap-2',
@@ -66,11 +68,13 @@ export function Thermometer({
   return (
     <div className={cn('flex flex-col', styles.container)}>
       {/* Temperature Display */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <span className={cn(styles.temp, getTemperatureColor())}>
           {temperature}°
         </span>
-        <span className="text-[9px] sm:text-[10px] text-muted-foreground">{getTemperatureLabel()}</span>
+        <span className={cn(styles.label || 'text-[0.6875rem] sm:text-[0.75rem]', 'text-muted-foreground font-medium')}>
+          {getTemperatureLabel()}
+        </span>
       </div>
 
       {/* Temperature Bar */}
@@ -104,7 +108,7 @@ export function Thermometer({
           >
             <Flame className={styles.icon} aria-hidden="true" />
           </Button>
-          <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground" aria-live="polite" aria-atomic="true">
+          <div className={cn('flex items-center gap-2 text-muted-foreground', styles.votes || 'text-[0.625rem] sm:text-[0.6875rem]')} aria-live="polite" aria-atomic="true">
             <span className="flex items-center gap-0.5">
               <Flame className="h-2.5 w-2.5 text-temperature-hot" aria-hidden="true" />
               <span aria-label={`${hotVotes} votos quentes`}>{hotVotes}</span>
