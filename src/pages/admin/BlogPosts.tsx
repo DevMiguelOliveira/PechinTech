@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { BulkCreateBlogPosts } from '@/components/admin/BulkCreateBlogPosts';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
+import { generateGenericBlogContent } from '@/services/gemini';
+import { toast } from '@/hooks/use-toast';
 
 const BlogPosts = () => {
   const { data: posts, isLoading } = useBlogPosts();
@@ -25,10 +27,14 @@ const BlogPosts = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [geminiTopic, setGeminiTopic] = useState('');
+  const [geminiDescription, setGeminiDescription] = useState('');
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<BlogPostFormData>();
   const watchedContent = watch('content');
   const watchedPublished = watch('published');
+  const watchedTitle = watch('title');
 
   const generateSlug = (title: string) => {
     return title
@@ -86,6 +92,74 @@ const BlogPosts = () => {
   const closeCreateDialog = () => {
     setIsCreateDialogOpen(false);
     reset();
+    setGeminiTopic('');
+    setGeminiDescription('');
+  };
+
+  const handleGenerateContent = async () => {
+    const title = watchedTitle || geminiTopic;
+    
+    if (!title || title.trim() === '') {
+      toast({
+        title: 'Título necessário',
+        description: 'Informe um título no campo acima ou um tema/tópico para gerar o conteúdo.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Verificar se a API Key está configurada
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    const hasValidKey = apiKey && apiKey.length >= 20 && !apiKey.includes('sua_chave') && !apiKey.includes('your_api_key');
+    
+    if (!hasValidKey) {
+      toast({
+        title: 'API Key não configurada',
+        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e reinicie o servidor para usar esta funcionalidade.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingContent(true);
+
+    try {
+      const response = await generateGenericBlogContent({
+        title: title,
+        topic: geminiTopic || title,
+        description: geminiDescription || undefined,
+        wordCount: 1000,
+      });
+
+      if (response.error) {
+        toast({
+          title: 'Erro ao gerar conteúdo',
+          description: response.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (response.content) {
+        setValue('content', response.content);
+        if (response.excerpt) {
+          setValue('excerpt', response.excerpt);
+        }
+        toast({
+          title: 'Conteúdo gerado com sucesso!',
+          description: 'O conteúdo foi gerado pela IA. Revise e ajuste conforme necessário antes de salvar.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar conteúdo:', error);
+      toast({
+        title: 'Erro ao gerar conteúdo',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingContent(false);
+    }
   };
 
   if (isLoading) {
@@ -173,13 +247,61 @@ const BlogPosts = () => {
               </div>
 
               <div>
-                <Label>Conteúdo (Markdown)</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Conteúdo (Markdown)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateContent}
+                    disabled={isGeneratingContent || (!watchedTitle && !geminiTopic)}
+                    className="gap-2"
+                  >
+                    {isGeneratingContent ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Gerar com Gemini AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {!watchedTitle && (
+                  <div className="mb-2 p-3 bg-muted/50 rounded-md border border-border">
+                    <Label htmlFor="gemini-topic" className="text-sm font-medium mb-2 block">
+                      Tema/Tópico (para gerar conteúdo com IA)
+                    </Label>
+                    <Input
+                      id="gemini-topic"
+                      value={geminiTopic}
+                      onChange={(e) => setGeminiTopic(e.target.value)}
+                      placeholder="Ex: Como escolher a melhor placa de vídeo"
+                      className="mb-2"
+                    />
+                    <Textarea
+                      value={geminiDescription}
+                      onChange={(e) => setGeminiDescription(e.target.value)}
+                      placeholder="Descrição adicional ou contexto (opcional)..."
+                      rows={2}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Ou preencha o campo "Título" acima e use o botão "Gerar com Gemini AI"
+                    </p>
+                  </div>
+                )}
                 <Textarea
                   {...register('content', { required: 'Conteúdo é obrigatório' })}
-                  placeholder="Escreva o conteúdo do post em Markdown..."
+                  placeholder="Escreva o conteúdo do post em Markdown ou use o botão acima para gerar com IA..."
                   rows={10}
                 />
                 {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Você pode escrever manualmente ou usar o botão "Gerar com Gemini AI" para criar conteúdo automaticamente.
+                </p>
               </div>
 
               <div className="flex items-center space-x-2">

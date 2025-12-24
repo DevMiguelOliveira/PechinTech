@@ -176,6 +176,137 @@ Encontre este produto com o melhor preço e condições:
 }
 
 /**
+ * Interface para geração de conteúdo genérico de blog
+ */
+export interface GeminiGenericBlogRequest {
+  title: string;
+  topic?: string;
+  description?: string;
+  keywords?: string[];
+  wordCount?: number; // Padrão: 1000
+}
+
+/**
+ * Gera conteúdo genérico de blog post usando Google Gemini
+ */
+export async function generateGenericBlogContent(
+  request: GeminiGenericBlogRequest
+): Promise<GeminiResponse> {
+  // Verificar API Key de forma mais robusta
+  const apiKey = GEMINI_API_KEY?.trim();
+  const isValidKey = apiKey && apiKey.length >= 20 && !apiKey.includes('sua_chave') && !apiKey.includes('your_api_key');
+  
+  if (!isValidKey) {
+    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e reinicie o servidor.';
+    console.error('[Gemini]', errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  const wordCount = request.wordCount || 1000;
+  const keywordsText = request.keywords && request.keywords.length > 0 
+    ? `\n- Palavras-chave: ${request.keywords.join(', ')}`
+    : '';
+
+  const prompt = `Crie um artigo de blog completo e profissional em português brasileiro sobre "${request.title}".
+
+${request.topic ? `TEMA/ASSUNTO: ${request.topic}\n` : ''}
+${request.description ? `DESCRIÇÃO: ${request.description}\n` : ''}
+
+INSTRUÇÕES:
+- O artigo deve ter aproximadamente ${wordCount} palavras
+- Use formatação Markdown (títulos com #, listas, negrito, itálico, etc.)
+- Seja informativo, útil e otimizado para SEO
+- Inclua seções como: introdução, desenvolvimento do tema, exemplos práticos, conclusão
+- Use linguagem natural, envolvente e acessível
+- Seja específico e detalhado sobre o assunto
+- Use parágrafos bem estruturados
+- Inclua listas quando apropriado
+${keywordsText}
+
+Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e bem estruturado.`;
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: Math.min(wordCount * 2, 4096), // Aproximadamente 2 tokens por palavra
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error?.message || `Erro na API Gemini: ${response.status} ${response.statusText}`;
+      console.error('[Gemini] Erro na resposta da API:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+      });
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Resposta inválida da API Gemini');
+    }
+
+    const fullContent = data.candidates[0].content.parts[0].text;
+
+    // Gerar excerpt (primeiras 2-3 frases ou até 200 caracteres)
+    const excerpt = generateGenericExcerpt(fullContent, request.title);
+
+    return {
+      content: fullContent,
+      excerpt,
+    };
+  } catch (error) {
+    console.error('[Gemini] Erro ao gerar conteúdo genérico:', error);
+    
+    let errorMessage = 'Erro desconhecido ao gerar conteúdo com Gemini';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Tratamento específico para erros comuns
+      if (error.message.includes('API key not valid') || error.message.includes('invalid API key')) {
+        errorMessage = 'API Key inválida. Verifique se a chave está correta no arquivo .env e reinicie o servidor';
+      } else if (error.message.includes('quota') || error.message.includes('Quota')) {
+        errorMessage = 'Quota da API excedida. Verifique seu limite no Google AI Studio';
+      } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        errorMessage = 'Acesso negado. Verifique se a API Key tem permissões adequadas';
+      } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+        errorMessage = 'Muitas requisições. Aguarde alguns instantes e tente novamente';
+      } else if (error.message.includes('network') || error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente';
+      }
+    }
+    
+    return {
+      content: '',
+      excerpt: '',
+      error: errorMessage,
+    };
+  }
+}
+
+/**
  * Gera um excerpt a partir do conteúdo
  */
 function generateExcerpt(content: string, productTitle: string): string {
@@ -197,6 +328,33 @@ function generateExcerpt(content: string, productTitle: string): string {
   // Se o excerpt for muito curto, adiciona contexto
   if (firstParagraph.length < 50) {
     return `Descubra tudo sobre ${productTitle}. ${firstParagraph}`;
+  }
+
+  return firstParagraph;
+}
+
+/**
+ * Gera um excerpt genérico a partir do conteúdo
+ */
+function generateGenericExcerpt(content: string, title: string): string {
+  // Remove markdown headers e formatação
+  const plainText = content
+    .replace(/^#+\s+/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .trim();
+
+  // Pega o primeiro parágrafo ou primeiras 200 caracteres
+  const firstParagraph = plainText.split('\n\n')[0] || plainText.substring(0, 200);
+
+  // Limita a 200 caracteres
+  if (firstParagraph.length > 200) {
+    return firstParagraph.substring(0, 197) + '...';
+  }
+
+  // Se o excerpt for muito curto, adiciona contexto
+  if (firstParagraph.length < 50) {
+    return `Leia mais sobre ${title}. ${firstParagraph}`;
   }
 
   return firstParagraph;
