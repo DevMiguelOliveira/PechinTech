@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, Store, Copy, Check, Share2, Sparkles, Shield } from 'lucide-react';
+import { Heart, MessageCircle, Store, Copy, Check, Share2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Thermometer } from '@/components/Thermometer';
@@ -137,17 +137,17 @@ export function ProductCard({
 
       {/* Discount Badge - Enhanced */}
       {discount > 0 && (
-        <div className="absolute top-3 left-3 z-20">
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
             <Badge
             className={cn(
-              'font-black shadow-2xl text-[0.6875rem] sm:text-[0.75rem] px-3 py-1.5',
+              'font-black shadow-2xl text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5',
               'bg-gradient-to-r from-red-500 to-orange-500 text-white',
               'border-2 border-white/20 backdrop-blur-sm',
               'animate-pulse hover:animate-none leading-tight',
               discount >= 50 && 'from-red-600 to-pink-600 scale-110'
             )}
           >
-            <Sparkles className="h-3 w-3 mr-1 inline" />
+            <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 inline shrink-0" />
             -{discount}% OFF
           </Badge>
         </div>
@@ -158,11 +158,11 @@ export function ProductCard({
         variant="ghost"
         size="icon"
         className={cn(
-          'absolute top-3 right-3 z-20 rounded-full',
+          'absolute top-2 right-2 sm:top-3 sm:right-3 z-20 rounded-full',
           'bg-background/90 backdrop-blur-md border border-border/50',
           'hover:bg-primary hover:text-primary-foreground hover:scale-110',
           'hover:border-primary transition-all duration-300',
-          'h-9 w-9 shadow-lg'
+          'h-8 w-8 sm:h-9 sm:w-9 shadow-lg'
         )}
         onClick={(e) => {
           e.stopPropagation();
@@ -170,7 +170,7 @@ export function ProductCard({
         }}
         aria-label={isFavorite ? `Remover ${product.title} dos favoritos` : `Adicionar ${product.title} aos favoritos`}
       >
-        <Heart className={cn('h-4 w-4 transition-all', isFavorite && 'fill-current scale-110')} aria-hidden="true" />
+        <Heart className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all', isFavorite && 'fill-current scale-110')} aria-hidden="true" />
       </Button>
 
       {/* Product Image - Vertical Layout */}
@@ -180,7 +180,7 @@ export function ProductCard({
           alt={product.title}
           loading="lazy"
           className={cn(
-            'w-full h-full object-contain p-4 sm:p-6 transition-all duration-500',
+            'w-full h-full object-contain p-3 sm:p-4 md:p-5 lg:p-6 transition-all duration-500',
             'group-hover:scale-110 group-hover:brightness-110'
           )}
           onError={(e) => {
@@ -194,48 +194,48 @@ export function ProductCard({
       </div>
 
       {/* Content - Vertical Layout */}
-      <div className="flex flex-col flex-1 p-4 sm:p-5 lg:p-6 gap-3 sm:gap-4 relative z-10">
+      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5 lg:p-6 gap-2.5 sm:gap-3 md:gap-4 relative z-10">
         {/* Header Section - Store, Category */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <Badge 
               variant="outline" 
-              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 bg-background/80 backdrop-blur-sm border-primary/30"
+              className="text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 bg-background/80 backdrop-blur-sm border-primary/30"
             >
-              <Store className="h-3 w-3 mr-1.5" />
-              {sanitizeText(product.store)}
+              <Store className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 sm:mr-1.5 shrink-0" />
+              <span className="truncate max-w-[80px] sm:max-w-none">{sanitizeText(product.store)}</span>
             </Badge>
             <Badge 
               variant="secondary" 
-              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 capitalize bg-primary/10 text-primary border-primary/20"
+              className="text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 capitalize bg-primary/10 text-primary border-primary/20"
             >
-              {sanitizeText(product.category)}
+              <span className="truncate">{sanitizeText(product.category)}</span>
             </Badge>
         </div>
 
           {/* Title - SEO Optimized H3 */}
-          <h3 className="font-bold text-[0.9375rem] sm:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.4] group-hover:text-primary transition-colors duration-300">
+          <h3 className="font-bold text-[0.875rem] sm:text-[0.9375rem] md:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.3] sm:leading-[1.4] group-hover:text-primary transition-colors duration-300">
             {sanitizeText(product.title)}
           </h3>
           
           {/* Description */}
-          <p className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.5]">
+          <p className="text-[0.75rem] sm:text-[0.8125rem] md:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.4] sm:leading-[1.5]">
             {sanitizeText(product.description)}
           </p>
 
         {/* Price Section */}
-        <div className="space-y-1.5 py-1">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-through font-medium">
+        <div className="space-y-1 sm:space-y-1.5 py-0.5 sm:py-1">
+          <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
+            <span className="text-[0.75rem] sm:text-[0.8125rem] md:text-[0.875rem] text-muted-foreground line-through font-medium">
               {formatPrice(product.original_price)}
             </span>
             {savings > 0 && (
-              <Badge variant="outline" className="text-[0.6875rem] px-2 py-0.5 bg-green-500/10 text-green-600 border-green-500/30 font-medium">
-                Economize {formatPrice(savings)}
+              <Badge variant="outline" className="text-[0.625rem] sm:text-[0.6875rem] px-1.5 sm:px-2 py-0.5 bg-green-500/10 text-green-600 border-green-500/30 font-medium">
+                <span className="hidden xs:inline">Economize </span>{formatPrice(savings)}
               </Badge>
             )}
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl lg:text-[2rem] font-black text-primary leading-[1.1] tracking-tight">
+            <span className="text-xl sm:text-2xl md:text-3xl lg:text-[2rem] font-black text-primary leading-[1.1] tracking-tight">
               {formatPrice(product.current_price)}
             </span>
           </div>
@@ -254,7 +254,7 @@ export function ProductCard({
         </div>
 
         {/* Bottom Section - Coupon, CTA, Actions */}
-        <div className="space-y-3 pt-2 border-t border-border/30 mt-auto">
+        <div className="space-y-2 sm:space-y-2.5 md:space-y-3 pt-1.5 sm:pt-2 border-t border-border/30 mt-auto">
           {/* Coupon Code */}
           {product.coupon_code && (
             <button
@@ -288,46 +288,42 @@ export function ProductCard({
             onClick={handlePromoClick}
             size="lg"
             variant="card"
-            className="w-full h-12 sm:h-14"
+            className="w-full h-11 sm:h-12 md:h-14"
           />
 
-          {/* Footer - Trust Badge, Social Proof, Actions */}
-          <div className="flex flex-col gap-2.5">
-            {/* Trust Badge - Uma linha completa */}
-            <div className="flex items-center gap-1.5 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground/80 px-2 py-1.5 bg-muted/30 rounded-lg border border-border/30 leading-relaxed w-full">
-              <Shield className="h-3 w-3 shrink-0" />
-              <span className="flex-1">Link afiliado • Ganhamos comissão sem custo extra</span>
-            </div>
-
+          {/* Footer - Social Proof, Actions */}
+          <div className="flex flex-col gap-2 sm:gap-2.5">
             {/* Social Proof - Uma linha completa */}
-            <div className="flex items-center gap-2 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground w-full">
-              <Sparkles className="h-3 w-3 text-primary shrink-0" />
-              <span className="font-semibold flex-1">{product.hot_votes + product.cold_votes} avaliações</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] text-muted-foreground w-full flex-wrap">
+              <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary shrink-0" />
+              <span className="font-semibold flex-1 min-w-0 truncate">{product.hot_votes + product.cold_votes} avaliações</span>
               {discount >= 30 && (
-                <Badge variant="outline" className="text-[0.625rem] px-2 py-0.5 bg-red-500/10 text-red-600 border-red-500/30 animate-pulse font-medium shrink-0">
-                  ⚡ Oferta limitada
+                <Badge variant="outline" className="text-[0.5625rem] sm:text-[0.625rem] px-1.5 sm:px-2 py-0.5 bg-red-500/10 text-red-600 border-red-500/30 animate-pulse font-medium shrink-0">
+                  <span className="hidden xs:inline">⚡ </span>Oferta limitada
                 </Badge>
               )}
             </div>
 
-            {/* Secondary Actions - Uma linha completa */}
-            <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/20">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" aria-hidden="true" />
-                <span className="text-[0.6875rem] sm:text-[0.75rem] font-medium">{product.comments_count}</span>
+            {/* Secondary Actions e Data */}
+            <div className="flex flex-col gap-1.5 sm:gap-2 pt-1 border-t border-border/20">
+              <div className="flex items-center justify-between gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+                  <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 shrink-0" aria-hidden="true" />
+                  <span className="text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-medium">{product.comments_count}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 sm:h-8 px-2 sm:px-3 text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] hover:bg-green-500/10 hover:text-green-600 hover:border-green-500/30 border border-transparent hover:border transition-all font-medium shrink-0"
+                  onClick={handleShare}
+                  aria-label={`Compartilhar ${product.title}`}
+                >
+                  <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5 shrink-0" aria-hidden="true" />
+                  <span className="hidden sm:inline">Compartilhar</span>
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-3 text-[0.6875rem] sm:text-[0.75rem] hover:bg-green-500/10 hover:text-green-600 hover:border-green-500/30 border border-transparent hover:border transition-all font-medium shrink-0"
-                onClick={handleShare}
-                aria-label={`Compartilhar ${product.title}`}
-              >
-                <Share2 className="h-3.5 w-3.5 mr-1.5 shrink-0" aria-hidden="true" />
-                <span className="hidden sm:inline">Compartilhar</span>
-              </Button>
-              <p className="text-[0.625rem] sm:text-[0.6875rem] text-muted-foreground/70 hidden lg:inline shrink-0">
-                {formatDate(product.created_at)}
+              <p className="text-[0.5625rem] sm:text-[0.625rem] md:text-[0.6875rem] text-muted-foreground/70 text-center leading-relaxed px-1">
+                Produtos retirados de sites oficiais e sujeitos a alterações de valores sem aviso prévio <span className="whitespace-nowrap">[{formatDate(product.created_at)}]</span>
               </p>
             </div>
           </div>

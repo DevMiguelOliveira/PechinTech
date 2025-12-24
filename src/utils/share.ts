@@ -1,17 +1,35 @@
 /**
  * Gera o slug do produto para URLs amigáveis
+ * Garante que o slug seja único e consistente
  */
 export function generateProductSlug(product: { id: string; title: string }): string {
-  const slug = product.title
+  // Normaliza o título
+  let slug = product.title
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9\s-]/g, '')   // Remove caracteres especiais
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-') + '-' + product.id.slice(0, 8);
+    .replace(/\s+/g, '-')           // Espaços para hífens
+    .replace(/-+/g, '-');           // Múltiplos hífens para um
   
-  return slug;
+  // Remove hífens no início e fim
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  // Se o slug ficar vazio, usa um fallback
+  if (!slug || slug.length === 0) {
+    slug = 'produto';
+  }
+  
+  // Limita o tamanho do slug (máximo 100 caracteres para o título)
+  if (slug.length > 100) {
+    slug = slug.substring(0, 100).replace(/-+$/, '');
+  }
+  
+  // Adiciona o ID (primeiros 8 caracteres, sem hífens)
+  const productId = product.id.replace(/-/g, '').slice(0, 8);
+  
+  return `${slug}-${productId}`;
 }
 
 /**

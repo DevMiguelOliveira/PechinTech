@@ -56,27 +56,120 @@ const Product = () => {
 
   const product = useMemo((): DbProduct | null => {
     if (!dbProducts || !slug) return null;
-    // Tentar buscar por ID direto primeiro
-    const byId = dbProducts.find(p => p.id === slug);
-    if (byId) return byId;
     
-    // Extrair ID do slug (formato: titulo-produto-abc12345)
-    const idMatch = slug.match(/-([a-f0-9-]+)$/i);
-    if (idMatch) {
-      const partialId = idMatch[1];
-      const found = dbProducts.find(p => p.id.includes(partialId));
-      if (found) return found;
+    console.log('[Product] Buscando produto com slug:', slug);
+    console.log('[Product] Total de produtos disponíveis:', dbProducts.length);
+    
+    // Estratégia 1: Tentar buscar por ID direto (caso o slug seja apenas o ID)
+    const byId = dbProducts.find(p => p.id === slug);
+    if (byId) {
+      console.log('[Product] Produto encontrado por ID direto');
+      return byId;
     }
     
-    // Fallback: buscar por título
-    const normalizedSlug = slug.toLowerCase().replace(/-/g, ' ');
-    return dbProducts.find(p => {
-      const normalizedTitle = p.title.toLowerCase()
+    // Estratégia 2: Extrair ID do slug (formato: titulo-produto-abc12345)
+    // Tenta múltiplos padrões de regex para capturar o ID
+    const idPatterns = [
+      /-([a-f0-9]{8,})$/i,           // Padrão padrão: -abc12345
+      /-([a-f0-9-]+)$/i,              // Padrão flexível: -abc-123-45
+      /([a-f0-9]{8,})$/i,             // ID no final sem hífen
+      /([a-f0-9-]{8,})$/i,            // ID flexível no final
+    ];
+    
+    for (const pattern of idPatterns) {
+      const idMatch = slug.match(pattern);
+      if (idMatch) {
+        const partialId = idMatch[1].replace(/-/g, ''); // Remove hífens do ID
+        console.log('[Product] Tentando encontrar produto com ID parcial:', partialId);
+        
+        // Busca exata primeiro
+        const foundExact = dbProducts.find(p => p.id === partialId);
+        if (foundExact) {
+          console.log('[Product] Produto encontrado por ID parcial exato');
+          return foundExact;
+        }
+        
+        // Busca parcial (ID contém o partialId)
+        const foundPartial = dbProducts.find(p => {
+          const cleanId = p.id.replace(/-/g, '').toLowerCase();
+          const cleanPartial = partialId.toLowerCase();
+          return cleanId.includes(cleanPartial) || cleanPartial.includes(cleanId);
+        });
+        
+        if (foundPartial) {
+          console.log('[Product] Produto encontrado por ID parcial');
+          return foundPartial;
+        }
+      }
+    }
+    
+    // Estratégia 3: Buscar por título (mais flexível)
+    // Remove o ID do final do slug se existir
+    const slugWithoutId = slug.replace(/-[a-f0-9-]{8,}$/i, '').replace(/-+$/, '');
+    const normalizedSlug = slugWithoutId
+      .toLowerCase()
+      .replace(/-/g, ' ')
+      .trim();
+    
+    console.log('[Product] Buscando por título normalizado:', normalizedSlug);
+    
+    // Busca por título com múltiplas estratégias
+    const foundByTitle = dbProducts.find(p => {
+      // Normaliza o título do produto
+      const normalizedTitle = p.title
+        .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s]/g, '');
-      return normalizedTitle.includes(normalizedSlug) || normalizedSlug.includes(normalizedTitle);
-    }) || null;
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim();
+      
+      // Remove espaços extras
+      const cleanSlug = normalizedSlug.replace(/\s+/g, ' ').trim();
+      const cleanTitle = normalizedTitle.replace(/\s+/g, ' ').trim();
+      
+      // Verifica se o slug está contido no título ou vice-versa
+      const slugInTitle = cleanTitle.includes(cleanSlug);
+      const titleInSlug = cleanSlug.includes(cleanTitle);
+      
+      // Verifica similaridade (palavras-chave principais)
+      const slugWords = cleanSlug.split(' ').filter(w => w.length > 2);
+      const titleWords = cleanTitle.split(' ').filter(w => w.length > 2);
+      const commonWords = slugWords.filter(w => titleWords.includes(w));
+      const similarity = slugWords.length > 0 ? commonWords.length / slugWords.length : 0;
+      
+      return slugInTitle || titleInSlug || similarity >= 0.5;
+    });
+    
+    if (foundByTitle) {
+      console.log('[Product] Produto encontrado por título');
+      return foundByTitle;
+    }
+    
+    // Estratégia 4: Busca fuzzy (tolerante a erros de digitação)
+    console.log('[Product] Tentando busca fuzzy...');
+    const fuzzyMatch = dbProducts.find(p => {
+      const title = p.title.toLowerCase();
+      const slugLower = slug.toLowerCase();
+      
+      // Verifica se palavras-chave principais estão presentes
+      const slugKeywords = slugLower
+        .replace(/-[a-f0-9-]{8,}$/i, '')
+        .split(/[- ]/)
+        .filter(w => w.length > 2);
+      
+      return slugKeywords.some(keyword => title.includes(keyword));
+    });
+    
+    if (fuzzyMatch) {
+      console.log('[Product] Produto encontrado por busca fuzzy');
+      return fuzzyMatch;
+    }
+    
+    console.warn('[Product] Produto não encontrado após todas as estratégias');
+    console.warn('[Product] Slug recebido:', slug);
+    console.warn('[Product] Títulos disponíveis:', dbProducts.slice(0, 5).map(p => p.title));
+    
+    return null;
   }, [dbProducts, slug]);
 
   const { data: comments = [] } = useComments(product?.id || '');

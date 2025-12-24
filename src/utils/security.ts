@@ -195,13 +195,26 @@ export function validateComment(data: unknown) {
 
 /**
  * Valida slug de produto
+ * Aceita múltiplos formatos para maior flexibilidade
  */
 export function validateProductSlug(slug: string | undefined): boolean {
   if (!slug) return false;
   
-  // Formato esperado: titulo-produto-abc12345
-  const slugPattern = /^[a-z0-9-]+-[a-f0-9]{8,}$/i;
-  return slugPattern.test(slug) && slug.length <= 200;
+  // Validação mais flexível - aceita:
+  // 1. Formato padrão: titulo-produto-abc12345
+  // 2. Apenas ID: abc12345
+  // 3. Título com ID: titulo-produto-abc-123-45
+  // 4. Título sem ID (para busca por título)
+  const slugPatterns = [
+    /^[a-z0-9-]+-[a-f0-9]{8,}$/i,      // Padrão padrão
+    /^[a-f0-9-]{8,}$/i,                 // Apenas ID
+    /^[a-z0-9-]+$/i,                    // Apenas título (sem ID)
+  ];
+  
+  const isValid = slugPatterns.some(pattern => pattern.test(slug));
+  const isValidLength = slug.length > 0 && slug.length <= 200;
+  
+  return isValid && isValidLength;
 }
 
 /**

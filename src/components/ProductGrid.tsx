@@ -100,7 +100,7 @@ export function ProductGrid({
           <meta itemProp="description" content={`Lista de ${products.length} promoções de tecnologia verificadas pela comunidade`} />
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         {products.map((product, index) => (
           <AnimatedProductCard
             key={product.id}

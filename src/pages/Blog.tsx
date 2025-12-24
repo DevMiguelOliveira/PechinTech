@@ -7,9 +7,19 @@ import { SEO } from '@/components/SEO';
 import { Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useEffect, useState } from 'react';
+import { testSupabaseConnection } from '@/utils/testSupabaseConnection';
 
 const Blog = () => {
-  const { data: posts, isLoading, error } = usePublishedBlogPosts();
+  const { data: posts, isLoading, error, refetch } = usePublishedBlogPosts();
+  const [connectionTest, setConnectionTest] = useState<any>(null);
+
+  // Testa conexão quando há erro
+  useEffect(() => {
+    if (error) {
+      testSupabaseConnection().then(setConnectionTest).catch(console.error);
+    }
+  }, [error]);
 
   if (isLoading) {
     return (
@@ -40,7 +50,7 @@ const Blog = () => {
   if (error) {
     console.error('Erro ao carregar blog:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    const errorDetails = error instanceof Error && error.cause ? String(error.cause) : null;
+    const errorDetails = error instanceof Error && (error as any).cause ? String((error as any).cause) : null;
     
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -63,22 +73,38 @@ const Blog = () => {
               {errorDetails}
             </p>
           )}
+          {connectionTest && (
+            <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
+              <p className="text-sm font-semibold">Diagnóstico de Conexão:</p>
+              <ul className="text-xs space-y-1 font-mono">
+                <li>Cliente configurado: {connectionTest.clientConfigured ? '✅' : '❌'}</li>
+                <li>URL: {connectionTest.url}</li>
+                <li>Chave anon: {connectionTest.anonKey}</li>
+                <li>Pode conectar: {connectionTest.canConnect ? '✅' : '❌'}</li>
+                <li>Pode ler posts: {connectionTest.canReadBlogPosts ? '✅' : '❌'}</li>
+                <li>Total de posts: {connectionTest.blogPostsCount}</li>
+                <li>Posts publicados: {connectionTest.publishedPostsCount}</li>
+                {connectionTest.errors.length > 0 && (
+                  <li className="text-red-500">
+                    Erros: {connectionTest.errors.join(', ')}
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
         <div className="flex gap-4 justify-center">
           <Button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              refetch();
+            }}
             className="mt-4"
           >
             Tentar Novamente
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              // Limpa o cache do React Query
-              if (window.location) {
-                window.location.href = '/blog';
-              }
-            }}
+            onClick={() => window.location.reload()}
             className="mt-4"
           >
             Recarregar Página
@@ -133,10 +159,20 @@ const Blog = () => {
         </p>
       </div>
 
-      {posts && posts.length === 0 ? (
+      {!posts || posts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mb-4">
             Nenhum artigo publicado ainda.
+          </p>
+          {error && (
+            <div className="mt-4 p-4 bg-muted rounded-lg max-w-2xl mx-auto">
+              <p className="text-sm text-muted-foreground font-mono">
+                {error instanceof Error ? error.message : 'Erro desconhecido'}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground/70 mt-4">
+            Os artigos aparecerão aqui quando forem publicados.
           </p>
         </div>
       ) : (
