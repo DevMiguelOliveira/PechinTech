@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, ExternalLink, Store, Copy, Check, Share2, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, Store, Copy, Check, Share2, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Thermometer } from '@/components/Thermometer';
@@ -183,14 +183,6 @@ export function ProductCard({
 
       {/* Product Image - Enhanced */}
       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/5 group/image">
-        {/* Hot Deal Badge on Image */}
-        {isHotDeal && (
-          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-primary/90 backdrop-blur-sm px-2 py-1 rounded-full">
-            <Zap className="h-3 w-3 text-yellow-300" />
-            <span className="text-[10px] font-bold text-white">HOT DEAL</span>
-          </div>
-        )}
-        
         <img
           src={product.image_url}
           alt={product.title}
