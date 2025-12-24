@@ -26,6 +26,12 @@ export interface GeminiResponse {
 export async function generateBlogPostContent(
   request: GeminiContentRequest
 ): Promise<GeminiResponse> {
+  console.log('[Gemini] Verificando API Key:', {
+    hasKey: !!GEMINI_API_KEY,
+    keyLength: GEMINI_API_KEY?.length || 0,
+    keyPreview: GEMINI_API_KEY ? `${GEMINI_API_KEY.substring(0, 10)}...` : 'não encontrada',
+  });
+  
   if (!GEMINI_API_KEY) {
     throw new Error('VITE_GEMINI_API_KEY não está configurada. Configure a variável de ambiente.');
   }

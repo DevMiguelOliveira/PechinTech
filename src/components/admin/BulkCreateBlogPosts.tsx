@@ -826,6 +826,12 @@ export function BulkCreateBlogPosts() {
 
     // Verificar se a API key do Gemini está configurada
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    console.log('[BulkCreateBlogPosts] Verificando API Key do Gemini:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      keyPreview: apiKey ? `${apiKey.substring(0, 10)}...` : 'não encontrada',
+      allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
+    });
     setGeminiApiKey(apiKey || null);
 
     checkTable();
