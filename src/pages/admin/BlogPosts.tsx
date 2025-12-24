@@ -109,24 +109,46 @@ const BlogPosts = () => {
     }
 
     // Verificar se a API Key está configurada usando a função exportada
+    // Verificar diretamente também para ter mais informações de debug
+    const rawEnvKey = import.meta.env.VITE_GEMINI_API_KEY;
     const apiKey = getGeminiApiKey();
     
     console.log('[BlogPosts] Verificando API Key:', {
-      hasKey: !!apiKey,
+      hasRawKey: !!rawEnvKey,
+      rawKeyType: typeof rawEnvKey,
+      rawKeyLength: rawEnvKey?.length || 0,
+      hasValidKey: !!apiKey,
       keyLength: apiKey?.length || 0,
       envKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
+      allViteKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
+      rawKeyPreview: rawEnvKey ? `${rawEnvKey.substring(0, 10)}...` : 'não encontrada',
     });
     
     if (!apiKey) {
-      toast({
-        title: 'API Key não configurada',
-        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e REINICIE o servidor (Ctrl+C e depois npm run dev) para usar esta funcionalidade.',
-        variant: 'destructive',
-      });
-      console.error('[BlogPosts] API Key não encontrada. Verifique:');
-      console.error('1. Se o arquivo .env existe na raiz do projeto');
-      console.error('2. Se a variável VITE_GEMINI_API_KEY está definida');
-      console.error('3. Se o servidor foi REINICIADO após adicionar a variável');
+      // Verificar se a chave existe mas não passou na validação
+      if (rawEnvKey) {
+        console.warn('[BlogPosts] API Key encontrada mas inválida:', {
+          length: rawEnvKey.trim().length,
+          value: rawEnvKey.substring(0, 20) + '...',
+        });
+        toast({
+          title: 'API Key inválida',
+          description: `A API Key foi encontrada mas não passou na validação. Verifique se está correta no arquivo .env e reinicie o servidor.`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'API Key não configurada',
+          description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e REINICIE o servidor (Ctrl+C e depois npm run dev) para usar esta funcionalidade.',
+          variant: 'destructive',
+        });
+        console.error('[BlogPosts] API Key não encontrada. Diagnóstico:');
+        console.error('1. Verifique se o arquivo .env existe na raiz do projeto');
+        console.error('2. Verifique se a variável VITE_GEMINI_API_KEY está definida');
+        console.error('3. IMPORTANTE: O servidor DEVE ser REINICIADO após adicionar/modificar variáveis no .env');
+        console.error('4. Pare o servidor (Ctrl+C) e execute: npm run dev');
+        console.error('5. Limpe o cache do navegador (Ctrl+Shift+R)');
+      }
       return;
     }
 
@@ -258,26 +280,33 @@ const BlogPosts = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Conteúdo (Markdown)</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateContent}
-                    disabled={isGeneratingContent || (!watchedTitle && !geminiTopic)}
-                    className="gap-2"
-                  >
-                    {isGeneratingContent ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Gerando...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        Gerar com Gemini AI
-                      </>
+                  <div className="flex items-center gap-2">
+                    {!getGeminiApiKey() && (
+                      <div className="text-xs text-muted-foreground mr-2">
+                        ⚠️ API Key não detectada
+                      </div>
                     )}
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateContent}
+                      disabled={isGeneratingContent || (!watchedTitle && !geminiTopic)}
+                      className="gap-2"
+                    >
+                      {isGeneratingContent ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Gerando...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Gerar com Gemini AI
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 {!watchedTitle && (
                   <div className="mb-2 p-3 bg-muted/50 rounded-md border border-border">
@@ -300,6 +329,24 @@ const BlogPosts = () => {
                     <p className="text-xs text-muted-foreground mt-2">
                       Ou preencha o campo "Título" acima e use o botão "Gerar com Gemini AI"
                     </p>
+                  </div>
+                )}
+                {!getGeminiApiKey() && (
+                  <div className="mb-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                    <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400 mb-2">
+                      ⚠️ API Key não detectada
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-500 mb-2">
+                      A API Key está no arquivo .env, mas o servidor precisa ser <strong>reiniciado</strong> para carregá-la.
+                    </p>
+                    <div className="text-xs text-yellow-600 dark:text-yellow-500 space-y-1">
+                      <p><strong>Para resolver:</strong></p>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li>Pare o servidor (Ctrl+C no terminal onde está rodando)</li>
+                        <li>Execute: <code className="bg-yellow-500/20 px-1 rounded">npm run dev</code></li>
+                        <li>Recarregue esta página (Ctrl+Shift+R)</li>
+                      </ol>
+                    </div>
                   </div>
                 )}
                 <Textarea
