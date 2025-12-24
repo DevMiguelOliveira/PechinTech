@@ -26,14 +26,23 @@ export interface GeminiResponse {
 export async function generateBlogPostContent(
   request: GeminiContentRequest
 ): Promise<GeminiResponse> {
+  // Verificar API Key de forma mais robusta
+  const apiKey = GEMINI_API_KEY?.trim();
+  const isValidKey = apiKey && apiKey.length > 10 && !apiKey.includes('sua_chave');
+  
   console.log('[Gemini] Verificando API Key:', {
     hasKey: !!GEMINI_API_KEY,
-    keyLength: GEMINI_API_KEY?.length || 0,
-    keyPreview: GEMINI_API_KEY ? `${GEMINI_API_KEY.substring(0, 10)}...` : 'não encontrada',
+    hasTrimmedKey: !!apiKey,
+    keyLength: apiKey?.length || 0,
+    isValidKey,
+    keyPreview: apiKey ? `${apiKey.substring(0, 10)}...` : 'não encontrada',
+    envKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
   });
   
-  if (!GEMINI_API_KEY) {
-    throw new Error('VITE_GEMINI_API_KEY não está configurada. Configure a variável de ambiente.');
+  if (!isValidKey) {
+    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e reinicie o servidor.';
+    console.error('[Gemini]', errorMsg);
+    throw new Error(errorMsg);
   }
 
   const prompt = `Crie um artigo de blog completo e profissional em português brasileiro sobre o produto "${request.productTitle}".
@@ -56,7 +65,7 @@ PRODUTO:
 Gere o conteúdo completo do artigo em Markdown.`;
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

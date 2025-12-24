@@ -20,6 +20,55 @@ function generateSlug(title: string): string {
     .replace(/-+/g, '-');
 }
 
+/**
+ * Gera conteúdo de template quando a API Key do Gemini não está disponível
+ */
+function generateTemplateContent(product: any): string {
+  const price = Number(product.current_price).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+  
+  const category = product.categories?.name || product.store || 'Tecnologia';
+  
+  return `# Guia Completo: ${product.title}
+
+${product.description || `Descubra tudo sobre ${product.title}, um produto de alta qualidade que está em promoção no PechinTech.`}
+
+## Sobre o Produto
+
+${product.title} é uma excelente opção para quem busca qualidade e bom custo-benefício. Este produto está disponível com um preço especial de **${price}**, oferecendo uma oportunidade única de adquirir um item de qualidade.
+
+## Características Principais
+
+- **Qualidade garantida**: Produto de marca confiável
+- **Preço especial**: Oferta limitada disponível
+- **Entrega rápida**: Disponível nas melhores lojas online
+- **Garantia**: Produto com garantia do fabricante
+
+## Por que Escolher Este Produto?
+
+Este produto oferece excelente relação custo-benefício, sendo uma escolha inteligente para quem busca qualidade sem pagar caro. A promoção atual torna este produto ainda mais atrativo.
+
+## Dicas de Uso
+
+- Leia o manual do fabricante antes de usar
+- Verifique as especificações técnicas para garantir compatibilidade
+- Aproveite a garantia em caso de problemas
+
+## Onde Comprar
+
+Encontre este produto com o melhor preço e condições:
+
+**👉 [Ver Oferta do ${product.title}](${product.affiliate_url})**
+
+*Link afiliado - Ao comprar através deste link, você ajuda a manter o PechinTech funcionando sem custo adicional para você.*
+
+---
+
+*Artigo criado pelo PechinTech - As melhores promoções de tecnologia do Brasil.*`;
+}
+
 const blogPostsTemplates = [
   {
     title: 'Guia Completo: Como Escolher a Melhor Placa de Vídeo para Seu PC Gamer',
@@ -826,13 +875,20 @@ export function BulkCreateBlogPosts() {
 
     // Verificar se a API key do Gemini está configurada
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const trimmedKey = apiKey?.trim();
+    const isValidKey = trimmedKey && trimmedKey.length > 10 && !trimmedKey.includes('sua_chave');
+    
     console.log('[BulkCreateBlogPosts] Verificando API Key do Gemini:', {
       hasKey: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      keyPreview: apiKey ? `${apiKey.substring(0, 10)}...` : 'não encontrada',
+      hasTrimmedKey: !!trimmedKey,
+      keyLength: trimmedKey?.length || 0,
+      isValidKey,
+      keyPreview: trimmedKey ? `${trimmedKey.substring(0, 10)}...` : 'não encontrada',
       allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
+      envKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
     });
-    setGeminiApiKey(apiKey || null);
+    
+    setGeminiApiKey(isValidKey ? trimmedKey : null);
 
     checkTable();
   }, []);
@@ -847,13 +903,13 @@ export function BulkCreateBlogPosts() {
       return;
     }
 
-    if (!geminiApiKey) {
-      toast({
-        title: 'API Key não configurada',
-        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env para gerar conteúdo com Google Gemini.',
-        variant: 'destructive',
-      });
-      return;
+    // Verificar novamente a API Key (pode ter sido atualizada)
+    // Nota: A API Key é opcional - se não estiver disponível, usaremos templates
+    const currentApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    const hasValidKey = currentApiKey && currentApiKey.length > 10 && !currentApiKey.includes('sua_chave');
+    
+    if (!hasValidKey) {
+      console.log('[BulkCreateBlogPosts] API Key não disponível, usando templates pré-definidos');
     }
 
     if (!products || products.length === 0) {
@@ -904,25 +960,41 @@ export function BulkCreateBlogPosts() {
       }
 
       try {
-        // Gerar conteúdo com Gemini
-        const geminiResponse = await generateBlogPostContent({
-          productTitle: product.title,
-          productDescription: product.description || product.title,
-          productPrice: Number(product.current_price),
-          productCategory: product.categories?.name || product.store || 'Tecnologia',
-          affiliateUrl: product.affiliate_url,
-        });
+        // Verificar API Key novamente antes de usar
+        const currentApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+        const hasValidKey = currentApiKey && currentApiKey.length > 10 && !currentApiKey.includes('sua_chave');
+        
+        let content = '';
+        let excerpt = '';
+        
+        if (hasValidKey) {
+          // Gerar conteúdo com Gemini
+          const geminiResponse = await generateBlogPostContent({
+            productTitle: product.title,
+            productDescription: product.description || product.title,
+            productPrice: Number(product.current_price),
+            productCategory: product.categories?.name || product.store || 'Tecnologia',
+            affiliateUrl: product.affiliate_url,
+          });
 
-        if (geminiResponse.error || !geminiResponse.content) {
-          throw new Error(geminiResponse.error || 'Erro ao gerar conteúdo com Gemini');
+          if (geminiResponse.error || !geminiResponse.content) {
+            throw new Error(geminiResponse.error || 'Erro ao gerar conteúdo com Gemini');
+          }
+
+          content = geminiResponse.content;
+          excerpt = geminiResponse.excerpt || `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`;
+        } else {
+          // Usar template genérico quando API Key não estiver disponível
+          content = generateTemplateContent(product);
+          excerpt = `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`;
         }
 
         // Criar post
         await createPost.mutateAsync({
           title,
           slug,
-          content: geminiResponse.content,
-          excerpt: geminiResponse.excerpt || `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`,
+          content,
+          excerpt,
           published: true,
           image_url: product.image_url || null,
         });
@@ -1000,19 +1072,34 @@ export function BulkCreateBlogPosts() {
         )}
 
         {!geminiApiKey && (
-          <Alert variant="destructive">
+          <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>API Key do Google Gemini não configurada</AlertTitle>
+            <AlertTitle>API Key do Google Gemini não configurada (Opcional)</AlertTitle>
             <AlertDescription className="space-y-2">
-              <p>Para gerar conteúdo automaticamente, configure a variável de ambiente <code className="bg-muted px-1 rounded text-xs">VITE_GEMINI_API_KEY</code> no arquivo <code className="bg-muted px-1 rounded text-xs">.env</code>.</p>
+              <p>
+                Para gerar conteúdo <strong>automaticamente com IA</strong>, configure a variável de ambiente{' '}
+                <code className="bg-muted px-1 rounded text-xs">VITE_GEMINI_API_KEY</code> no arquivo{' '}
+                <code className="bg-muted px-1 rounded text-xs">.env</code>.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <strong>Nota:</strong> Mesmo sem a API Key, você pode criar posts usando templates pré-definidos. 
+                A API Key é opcional, mas recomendada para conteúdo mais rico e personalizado.
+              </p>
               <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                <strong>Como obter a API Key:</strong>
+                <strong>Como obter a API Key (opcional):</strong>
                 <ol className="list-decimal list-inside space-y-1 mt-1">
-                  <li>Acesse <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
-                  <li>Crie uma nova API Key</li>
-                  <li>Adicione no arquivo <code className="bg-muted px-1 rounded">.env</code>: <code className="bg-muted px-1 rounded">VITE_GEMINI_API_KEY=sua_chave_aqui</code></li>
-                  <li>Reinicie o servidor de desenvolvimento</li>
+                  <li>Acesse <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Google AI Studio</a></li>
+                  <li>Faça login com sua conta Google</li>
+                  <li>Clique em "Create API Key" ou "Get API Key"</li>
+                  <li>Copie a chave gerada</li>
+                  <li>Adicione no arquivo <code className="bg-muted px-1 rounded">.env</code> na raiz do projeto:</li>
+                  <li className="ml-4"><code className="bg-muted px-1 rounded">VITE_GEMINI_API_KEY=sua_chave_aqui</code></li>
+                  <li><strong>IMPORTANTE:</strong> Reinicie o servidor de desenvolvimento após adicionar a chave</li>
                 </ol>
+              </div>
+              <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs">
+                <strong>💡 Dica:</strong> Se você já configurou a API Key mas ainda vê este aviso, 
+                certifique-se de ter <strong>reiniciado o servidor</strong> após adicionar a variável no arquivo .env.
               </div>
             </AlertDescription>
           </Alert>
@@ -1022,7 +1109,13 @@ export function BulkCreateBlogPosts() {
           <div className="text-sm text-muted-foreground">Carregando produtos...</div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Este recurso cria automaticamente posts de blog baseados nos produtos existentes no site, usando Google Gemini para gerar conteúdo profissional. Serão criados posts para até 10 produtos que ainda não possuem post associado.
+            Este recurso cria automaticamente posts de blog baseados nos produtos existentes no site.
+            {geminiApiKey ? (
+              <span> Usando <strong>Google Gemini AI</strong> para gerar conteúdo profissional.</span>
+            ) : (
+              <span> Usando <strong>templates pré-definidos</strong> (configure a API Key do Gemini para conteúdo gerado por IA).</span>
+            )}
+            {' '}Serão criados posts para até 10 produtos que ainda não possuem post associado.
             {products && products.length > 0 && (
               <span className="block mt-1 font-semibold">
                 {products.length} produto(s) disponível(is) para criar posts.
@@ -1033,7 +1126,7 @@ export function BulkCreateBlogPosts() {
 
         <Button
           onClick={handleBulkCreate}
-          disabled={isCreating || tableExists === false || !geminiApiKey || isLoadingProducts || !products || products.length === 0}
+          disabled={isCreating || tableExists === false || isLoadingProducts || !products || products.length === 0}
           className="w-full"
         >
           {isCreating ? (
