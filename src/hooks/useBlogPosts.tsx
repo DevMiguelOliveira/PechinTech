@@ -24,6 +24,7 @@ export interface BlogPostFormData {
   content: string;
   excerpt: string | null;
   published: boolean;
+  image_url?: string | null;
 }
 
 export function useBlogPosts() {
@@ -348,7 +349,7 @@ export function useCreateBlogPost() {
 
       const { data, error } = await supabase
         .from('blog_posts')
-        .insert([{ ...post, author_id: user.id }])
+        .insert([{ ...post, author_id: user.id, image_url: post.image_url || null }])
         .select()
         .single();
 
@@ -380,7 +381,7 @@ export function useUpdateBlogPost() {
     mutationFn: async ({ id, ...post }: BlogPostFormData & { id: string }) => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .update(post)
+        .update({ ...post, image_url: post.image_url || null })
         .eq('id', id)
         .select()
         .single();

@@ -73,6 +73,7 @@ const BlogPosts = () => {
     setValue('content', post.content);
     setValue('excerpt', post.excerpt || '');
     setValue('published', post.published);
+    setValue('image_url', post.image_url || '');
     setIsEditDialogOpen(true);
   };
 
@@ -156,6 +157,19 @@ const BlogPosts = () => {
                   {...register('excerpt')}
                   placeholder="Breve descrição do post..."
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="image_url">URL da Imagem (opcional)</Label>
+                <Input
+                  id="image_url"
+                  type="url"
+                  {...register('image_url')}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL da imagem de capa do post. Se não informado, será usada a imagem padrão.
+                </p>
               </div>
 
               <div>
@@ -295,6 +309,19 @@ const BlogPosts = () => {
                 {...register('excerpt')}
                 placeholder="Breve descrição do post..."
               />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-image_url">URL da Imagem (opcional)</Label>
+              <Input
+                id="edit-image_url"
+                type="url"
+                {...register('image_url')}
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                URL da imagem de capa do post. Se não informado, será usada a imagem padrão.
+              </p>
             </div>
 
             <div>

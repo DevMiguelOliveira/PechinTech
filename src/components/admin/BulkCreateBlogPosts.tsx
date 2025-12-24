@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateBlogPost } from '@/hooks/useBlogPosts';
+import { useActiveProducts } from '@/hooks/useProducts';
 import { supabase } from '@/services/supabase/client';
+import { generateBlogPostContent } from '@/services/gemini';
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -791,9 +793,11 @@ export function BulkCreateBlogPosts() {
   const [results, setResults] = useState<Array<{ title: string; status: 'success' | 'error' | 'skipped'; message: string }>>([]);
   const [tableExists, setTableExists] = useState<boolean | null>(null);
   const [tableCheckError, setTableCheckError] = useState<string | null>(null);
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const createPost = useCreateBlogPost();
+  const { data: products, isLoading: isLoadingProducts } = useActiveProducts();
 
-  // Verificar se a tabela existe
+  // Verificar se a tabela existe e se a API key do Gemini está configurada
   useEffect(() => {
     const checkTable = async () => {
       try {
@@ -820,6 +824,10 @@ export function BulkCreateBlogPosts() {
       }
     };
 
+    // Verificar se a API key do Gemini está configurada
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    setGeminiApiKey(apiKey || null);
+
     checkTable();
   }, []);
 
@@ -828,6 +836,24 @@ export function BulkCreateBlogPosts() {
       toast({
         title: 'Tabela não encontrada',
         description: 'A tabela blog_posts não existe. Execute as migrations do Supabase primeiro.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!geminiApiKey) {
+      toast({
+        title: 'API Key não configurada',
+        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env para gerar conteúdo com Google Gemini.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!products || products.length === 0) {
+      toast({
+        title: 'Nenhum produto encontrado',
+        description: 'Não há produtos ativos no site. Adicione produtos antes de criar posts.',
         variant: 'destructive',
       });
       return;
@@ -855,12 +881,16 @@ export function BulkCreateBlogPosts() {
 
     const existingSlugs = new Set(existingPosts?.map(p => p.slug) || []);
 
-    for (const template of blogPostsTemplates) {
-      const slug = generateSlug(template.title);
+    // Limitar a 10 produtos para não sobrecarregar a API
+    const productsToProcess = products.slice(0, 10);
+
+    for (const product of productsToProcess) {
+      const title = `Guia Completo: ${product.title} - Análise e Onde Comprar`;
+      const slug = generateSlug(title);
 
       if (existingSlugs.has(slug)) {
         newResults.push({
-          title: template.title,
+          title,
           status: 'skipped',
           message: 'Post já existe',
         });
@@ -868,16 +898,31 @@ export function BulkCreateBlogPosts() {
       }
 
       try {
+        // Gerar conteúdo com Gemini
+        const geminiResponse = await generateBlogPostContent({
+          productTitle: product.title,
+          productDescription: product.description || product.title,
+          productPrice: Number(product.current_price),
+          productCategory: product.categories?.name || product.store || 'Tecnologia',
+          affiliateUrl: product.affiliate_url,
+        });
+
+        if (geminiResponse.error || !geminiResponse.content) {
+          throw new Error(geminiResponse.error || 'Erro ao gerar conteúdo com Gemini');
+        }
+
+        // Criar post
         await createPost.mutateAsync({
-          title: template.title,
-          slug: slug,
-          content: template.content,
-          excerpt: template.excerpt,
+          title,
+          slug,
+          content: geminiResponse.content,
+          excerpt: geminiResponse.excerpt || `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`,
           published: true,
+          image_url: product.image_url || null,
         });
 
         newResults.push({
-          title: template.title,
+          title,
           status: 'success',
           message: 'Criado com sucesso',
         });
@@ -887,20 +932,22 @@ export function BulkCreateBlogPosts() {
         if (error?.message) {
           if (error.message.includes('Could not find the table') || error.message.includes('relation') || error.code === 'PGRST116') {
             errorMessage = 'Tabela blog_posts não existe. Execute as migrations.';
+          } else if (error.message.includes('VITE_GEMINI_API_KEY')) {
+            errorMessage = 'API Key do Gemini não configurada.';
           } else {
             errorMessage = error.message;
           }
         }
 
         newResults.push({
-          title: template.title,
+          title,
           status: 'error',
           message: errorMessage,
         });
       }
 
-      // Pequeno delay entre criações
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Delay entre criações para não sobrecarregar a API
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     setResults(newResults);
@@ -946,22 +993,50 @@ export function BulkCreateBlogPosts() {
           </Alert>
         )}
 
-        <p className="text-sm text-muted-foreground">
-          Este recurso cria automaticamente 10 posts de blog sobre produtos de tecnologia com conteúdo profissional e links para as promoções.
-        </p>
+        {!geminiApiKey && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>API Key do Google Gemini não configurada</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>Para gerar conteúdo automaticamente, configure a variável de ambiente <code className="bg-muted px-1 rounded text-xs">VITE_GEMINI_API_KEY</code> no arquivo <code className="bg-muted px-1 rounded text-xs">.env</code>.</p>
+              <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
+                <strong>Como obter a API Key:</strong>
+                <ol className="list-decimal list-inside space-y-1 mt-1">
+                  <li>Acesse <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
+                  <li>Crie uma nova API Key</li>
+                  <li>Adicione no arquivo <code className="bg-muted px-1 rounded">.env</code>: <code className="bg-muted px-1 rounded">VITE_GEMINI_API_KEY=sua_chave_aqui</code></li>
+                  <li>Reinicie o servidor de desenvolvimento</li>
+                </ol>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isLoadingProducts ? (
+          <div className="text-sm text-muted-foreground">Carregando produtos...</div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Este recurso cria automaticamente posts de blog baseados nos produtos existentes no site, usando Google Gemini para gerar conteúdo profissional. Serão criados posts para até 10 produtos que ainda não possuem post associado.
+            {products && products.length > 0 && (
+              <span className="block mt-1 font-semibold">
+                {products.length} produto(s) disponível(is) para criar posts.
+              </span>
+            )}
+          </p>
+        )}
 
         <Button
           onClick={handleBulkCreate}
-          disabled={isCreating || tableExists === false}
+          disabled={isCreating || tableExists === false || !geminiApiKey || isLoadingProducts || !products || products.length === 0}
           className="w-full"
         >
           {isCreating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Criando posts...
+              Gerando conteúdo e criando posts...
             </>
           ) : (
-            'Criar 10 Posts de Blog'
+            `Criar Posts para ${products ? Math.min(products.length, 10) : 0} Produtos`
           )}
         </Button>
 
