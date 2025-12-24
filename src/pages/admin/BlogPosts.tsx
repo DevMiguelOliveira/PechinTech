@@ -158,14 +158,11 @@ const BlogPosts = () => {
               </div>
 
               <div>
-                <Label>Conteúdo</Label>
-                <MDEditor
-                  value={watchedContent}
-                  onChange={(value) => setValue('content', value || '')}
-                  preview="edit"
-                  hideToolbar={false}
-                  visibleDragBar={false}
-                  data-color-mode="light"
+                <Label>Conteúdo (Markdown)</Label>
+                <Textarea
+                  {...register('content', { required: 'Conteúdo é obrigatório' })}
+                  placeholder="Escreva o conteúdo do post em Markdown..."
+                  rows={10}
                 />
                 {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
               </div>
@@ -260,7 +257,7 @@ const BlogPosts = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Post</DialogTitle>
           </DialogHeader>
@@ -302,6 +299,9 @@ const BlogPosts = () => {
                 {...register('content', { required: 'Conteúdo é obrigatório' })}
                 placeholder="Escreva o conteúdo do post em Markdown..."
                 rows={10}
+              />
+              {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
+            </div>
 
             <div className="flex items-center space-x-2">
               <Switch
