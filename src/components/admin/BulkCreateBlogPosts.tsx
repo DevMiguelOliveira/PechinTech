@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateBlogPost } from '@/hooks/useBlogPosts';
 import { useActiveProducts } from '@/hooks/useProducts';
 import { supabase } from '@/services/supabase/client';
-import { generateBlogPostContent } from '@/services/gemini';
+import { generateBlogPostContent, getGeminiApiKey } from '@/services/gemini';
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -873,23 +873,26 @@ export function BulkCreateBlogPosts() {
       }
     };
 
-    // Verificar se a API key do Gemini está configurada
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const trimmedKey = apiKey?.trim();
-    // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
-    const isValidKey = trimmedKey && trimmedKey.length >= 20 && !trimmedKey.includes('sua_chave') && !trimmedKey.includes('your_api_key');
+    // Verificar se a API key do Gemini está configurada usando a função exportada
+    const validKey = getGeminiApiKey();
     
     console.log('[BulkCreateBlogPosts] Verificando API Key do Gemini:', {
-      hasKey: !!apiKey,
-      hasTrimmedKey: !!trimmedKey,
-      keyLength: trimmedKey?.length || 0,
-      isValidKey,
-      keyPreview: trimmedKey ? `${trimmedKey.substring(0, 10)}...${trimmedKey.substring(trimmedKey.length - 4)}` : 'não encontrada',
+      hasKey: !!validKey,
+      keyLength: validKey?.length || 0,
+      keyPreview: validKey ? `${validKey.substring(0, 10)}...${validKey.substring(validKey.length - 4)}` : 'não encontrada',
       allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
       envKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
     });
     
-    setGeminiApiKey(isValidKey ? trimmedKey : null);
+    setGeminiApiKey(validKey);
+    
+    if (!validKey) {
+      console.warn('[BulkCreateBlogPosts] API Key não configurada. Verifique:');
+      console.warn('1. Se o arquivo .env existe na raiz do projeto');
+      console.warn('2. Se a variável VITE_GEMINI_API_KEY está definida');
+      console.warn('3. Se o servidor foi REINICIADO após adicionar a variável');
+      console.warn('4. Abra o console do navegador (F12) para ver mais detalhes');
+    }
 
     checkTable();
   }, []);

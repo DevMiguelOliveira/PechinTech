@@ -15,7 +15,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, Sparkles, Loader2 } from 'lucide-react
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
-import { generateGenericBlogContent } from '@/services/gemini';
+import { generateGenericBlogContent, getGeminiApiKey } from '@/services/gemini';
 import { toast } from '@/hooks/use-toast';
 
 const BlogPosts = () => {
@@ -108,16 +108,25 @@ const BlogPosts = () => {
       return;
     }
 
-    // Verificar se a API Key está configurada
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    const hasValidKey = apiKey && apiKey.length >= 20 && !apiKey.includes('sua_chave') && !apiKey.includes('your_api_key');
+    // Verificar se a API Key está configurada usando a função exportada
+    const apiKey = getGeminiApiKey();
     
-    if (!hasValidKey) {
+    console.log('[BlogPosts] Verificando API Key:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      envKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
+    });
+    
+    if (!apiKey) {
       toast({
         title: 'API Key não configurada',
-        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e reinicie o servidor para usar esta funcionalidade.',
+        description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e REINICIE o servidor (Ctrl+C e depois npm run dev) para usar esta funcionalidade.',
         variant: 'destructive',
       });
+      console.error('[BlogPosts] API Key não encontrada. Verifique:');
+      console.error('1. Se o arquivo .env existe na raiz do projeto');
+      console.error('2. Se a variável VITE_GEMINI_API_KEY está definida');
+      console.error('3. Se o servidor foi REINICIADO após adicionar a variável');
       return;
     }
 

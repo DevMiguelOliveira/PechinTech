@@ -3,9 +3,32 @@
  * Gera conteúdo de blog posts baseado em produtos
  */
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 // Usando a versão mais recente da API (gemini-1.5-flash ou gemini-1.5-pro)
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+/**
+ * Função para obter a API Key de forma mais robusta
+ * Verifica em runtime para garantir que a variável de ambiente foi carregada
+ */
+export function getGeminiApiKey(): string | null {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('[Gemini] VITE_GEMINI_API_KEY não encontrada em import.meta.env');
+    return null;
+  }
+  
+  const trimmed = apiKey.trim();
+  // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
+  if (trimmed.length >= 20 && !trimmed.includes('sua_chave') && !trimmed.includes('your_api_key')) {
+    return trimmed;
+  }
+  
+  console.warn('[Gemini] API Key inválida:', {
+    length: trimmed.length,
+    containsPlaceholder: trimmed.includes('sua_chave') || trimmed.includes('your_api_key'),
+  });
+  return null;
+}
 
 export interface GeminiContentRequest {
   productTitle: string;
@@ -27,27 +50,23 @@ export interface GeminiResponse {
 export async function generateBlogPostContent(
   request: GeminiContentRequest
 ): Promise<GeminiResponse> {
-  // Verificar API Key de forma mais robusta
-  const apiKey = GEMINI_API_KEY?.trim();
-  // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
-  const isValidKey = apiKey && apiKey.length >= 20 && !apiKey.includes('sua_chave') && !apiKey.includes('your_api_key');
+  // Verificar API Key de forma mais robusta (verificar novamente em runtime)
+  const apiKey = getGeminiApiKey();
   
   console.log('[Gemini] Verificando API Key:', {
-    hasKey: !!GEMINI_API_KEY,
-    hasTrimmedKey: !!apiKey,
+    hasKey: !!apiKey,
     keyLength: apiKey?.length || 0,
-    isValidKey,
     keyPreview: apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}` : 'não encontrada',
     envKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
     allViteKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
+    rawEnvValue: import.meta.env.VITE_GEMINI_API_KEY ? 'presente' : 'ausente',
   });
   
-  if (!isValidKey) {
-    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e reinicie o servidor.';
+  if (!apiKey) {
+    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e REINICIE o servidor de desenvolvimento.';
     console.error('[Gemini]', errorMsg, {
-      rawKey: GEMINI_API_KEY,
-      trimmedKey: apiKey,
-      keyLength: apiKey?.length,
+      rawEnvValue: import.meta.env.VITE_GEMINI_API_KEY,
+      allEnvKeys: Object.keys(import.meta.env),
     });
     throw new Error(errorMsg);
   }
@@ -192,13 +211,20 @@ export interface GeminiGenericBlogRequest {
 export async function generateGenericBlogContent(
   request: GeminiGenericBlogRequest
 ): Promise<GeminiResponse> {
-  // Verificar API Key de forma mais robusta
-  const apiKey = GEMINI_API_KEY?.trim();
-  const isValidKey = apiKey && apiKey.length >= 20 && !apiKey.includes('sua_chave') && !apiKey.includes('your_api_key');
+  // Verificar API Key de forma mais robusta (verificar novamente em runtime)
+  const apiKey = getGeminiApiKey();
   
-  if (!isValidKey) {
-    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e reinicie o servidor.';
-    console.error('[Gemini]', errorMsg);
+  console.log('[Gemini] Verificando API Key para conteúdo genérico:', {
+    hasKey: !!apiKey,
+    keyLength: apiKey?.length || 0,
+    keyPreview: apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}` : 'não encontrada',
+  });
+  
+  if (!apiKey) {
+    const errorMsg = 'VITE_GEMINI_API_KEY não está configurada ou é inválida. Configure a variável de ambiente no arquivo .env e REINICIE o servidor de desenvolvimento.';
+    console.error('[Gemini]', errorMsg, {
+      rawEnvValue: import.meta.env.VITE_GEMINI_API_KEY,
+    });
     throw new Error(errorMsg);
   }
 
