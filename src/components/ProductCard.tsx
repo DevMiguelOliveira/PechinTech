@@ -292,7 +292,7 @@ export function ProductCard({
         <Button
           variant="default"
           className={cn(
-            "w-full h-12 sm:h-14 text-base sm:text-lg font-black rounded-xl",
+            "w-full h-11 sm:h-12 text-xs sm:text-sm font-black rounded-xl px-3",
             "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary",
             "shadow-lg hover:shadow-xl hover:shadow-primary/50",
             "transition-all duration-300 hover:scale-105 hover:-translate-y-0.5",
@@ -302,10 +302,10 @@ export function ProductCard({
           onClick={handlePromoClick}
           aria-label={`Ver oferta de ${product.title} na ${product.store}`}
         >
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            <ExternalLink className="h-5 w-5 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
-            <span>VER OFERTA AGORA</span>
-            <TrendingUp className="h-5 w-5 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+          <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap">
+            <ExternalLink className="h-4 w-4 sm:h-4 sm:w-4 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+            <span className="truncate">VER OFERTA AGORA</span>
+            <TrendingUp className="h-4 w-4 sm:h-4 sm:w-4 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
           </span>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
         </Button>
