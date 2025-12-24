@@ -29,10 +29,19 @@ VITE_GEMINI_API_KEY=AIzaSyDxtqMoWu7HpLdsUiYIytffFk91_Rz7QVQ
 
 ### Google Gemini API
 
-1. Acesse o [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Faça login com sua conta Google
 3. Clique em "Create API Key" ou "Get API Key"
 4. Copie a chave e cole no `VITE_GEMINI_API_KEY`
+
+**Importante sobre variáveis de ambiente:**
+- **Frontend (Vite/React)**: Use `VITE_GEMINI_API_KEY` (com prefixo `VITE_`)
+  - O Vite só expõe variáveis que começam com `VITE_` para o código do navegador
+  - Esta é a forma correta para aplicações frontend
+  
+- **Backend (Node.js)**: Use `GEMINI_API_KEY` (sem prefixo)
+  - A documentação oficial do Google menciona `GEMINI_API_KEY` para uso no backend
+  - No frontend, isso não funcionará porque o Vite não expõe variáveis sem `VITE_`
 
 **Nota:** A chave API do Gemini é necessária apenas para a funcionalidade de geração automática de posts de blog. Se você não usar essa funcionalidade, pode deixar essa variável vazia.
 

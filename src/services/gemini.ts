@@ -2,32 +2,52 @@
  * Serviço de integração com Google Gemini API
  * Gera conteúdo de blog posts baseado em produtos
  * 
- * NOTA: Este serviço usa a API REST diretamente porque:
- * - O SDK oficial (@google/generative-ai) é projetado para Node.js/backend
- * - No frontend (React/Vite), precisamos usar fetch() para chamadas HTTP
- * - A API REST funciona perfeitamente no navegador e é a abordagem recomendada
+ * Este serviço tenta usar o SDK oficial @google/genai primeiro.
+ * Se o SDK não estiver disponível ou não funcionar no browser, usa a API REST como fallback.
  * 
  * Documentação oficial: https://ai.google.dev/gemini-api/docs
- * Modelo usado: gemini-2.5-flash (mais recente e rápido)
+ * Modelo usado: gemini-3-flash-preview (mais recente conforme exemplo oficial)
  */
 
-// Usando a versão mais recente da API (gemini-2.5-flash conforme documentação oficial)
-// Para frontend, usamos a API REST diretamente (o SDK oficial é para Node.js)
+import { GoogleGenAI } from '@google/genai';
+
+// Usando a versão mais recente da API
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const GEMINI_MODEL = 'gemini-2.5-flash'; // Modelo mais recente conforme documentação oficial
+const GEMINI_MODEL = 'gemini-3-flash-preview'; // Modelo mais recente conforme documentação oficial
 
 /**
  * Função para obter a API Key de forma mais robusta
  * Verifica em runtime para garantir que a variável de ambiente foi carregada
+ * 
+ * NOTA: No frontend (Vite), variáveis de ambiente precisam do prefixo VITE_
+ * A documentação do Google menciona GEMINI_API_KEY, mas isso é para backend.
+ * No frontend, usamos VITE_GEMINI_API_KEY.
+ * 
+ * Esta função tenta ambas as formas para máxima compatibilidade.
  */
 export function getGeminiApiKey(): string | null {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Tenta primeiro VITE_GEMINI_API_KEY (padrão para frontend/Vite)
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  // Se não encontrar, tenta GEMINI_API_KEY (caso alguém configure assim)
+  // Nota: No Vite, variáveis sem prefixo VITE_ não são expostas,
+  // mas tentamos por compatibilidade
   if (!apiKey) {
-    console.warn('[Gemini] VITE_GEMINI_API_KEY não encontrada em import.meta.env');
+    apiKey = import.meta.env.GEMINI_API_KEY;
+  }
+  
+  if (!apiKey) {
+    console.warn('[Gemini] API Key não encontrada. Verificando:', {
+      hasViteKey: !!import.meta.env.VITE_GEMINI_API_KEY,
+      hasGeminiKey: !!import.meta.env.GEMINI_API_KEY,
+      allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI') || k.includes('API')),
+      allViteKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
+    });
     return null;
   }
   
   const trimmed = apiKey.trim();
+  
   // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
   if (trimmed.length >= 20 && !trimmed.includes('sua_chave') && !trimmed.includes('your_api_key')) {
     return trimmed;
@@ -36,6 +56,7 @@ export function getGeminiApiKey(): string | null {
   console.warn('[Gemini] API Key inválida:', {
     length: trimmed.length,
     containsPlaceholder: trimmed.includes('sua_chave') || trimmed.includes('your_api_key'),
+    preview: trimmed.substring(0, 10) + '...',
   });
   return null;
 }
@@ -102,14 +123,62 @@ PRODUTO:
 Gere o conteúdo completo do artigo em Markdown, sendo detalhado e informativo.`;
 
   try {
-    // Usando a API REST oficial do Google Gemini
+    // Tentar usar o SDK oficial primeiro
+    try {
+      const client = new GoogleGenAI({ apiKey });
+      
+      console.log('[Gemini] Usando SDK oficial, modelo:', GEMINI_MODEL);
+      
+      const interaction = await client.interactions.create({
+        model: GEMINI_MODEL,
+        input: prompt,
+      });
+      
+      const lastOutput = interaction.outputs[interaction.outputs.length - 1];
+      const fullContent = typeof lastOutput === 'string' 
+        ? lastOutput 
+        : (lastOutput as any)?.text || (lastOutput as any)?.content || '';
+      
+      if (!fullContent || typeof fullContent !== 'string') {
+        throw new Error('Resposta vazia ou inválida do SDK');
+      }
+      
+      // Gerar excerpt (primeiras 2-3 frases ou até 200 caracteres)
+      const excerpt = generateExcerpt(fullContent, request.productTitle);
+
+      // Adicionar link de afiliado no final
+      const contentWithAffiliate = `${fullContent}
+
+---
+
+## 🛒 Onde Comprar
+
+Encontre este produto com o melhor preço e condições:
+
+**👉 [Ver Oferta do ${request.productTitle}](${request.affiliateUrl})**
+
+*Link afiliado - Ao comprar através deste link, você ajuda a manter o PechinTech funcionando sem custo adicional para você.*
+
+---
+
+*Artigo criado pelo PechinTech - As melhores promoções de tecnologia do Brasil.*`;
+
+      return {
+        content: contentWithAffiliate,
+        excerpt,
+      };
+    } catch (sdkError) {
+      // Se o SDK falhar (pode não funcionar no browser), usar API REST como fallback
+      console.warn('[Gemini] SDK falhou, usando API REST como fallback:', sdkError);
+      
+      // Continuar com implementação REST abaixo
+    }
+    
+    // Fallback: Usando a API REST oficial do Google Gemini
     // Formato: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}
     const apiUrl = `${GEMINI_API_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     
-    console.log('[Gemini] Enviando requisição para:', {
-      model: GEMINI_MODEL,
-      url: apiUrl.replace(apiKey, '***'),
-    });
+    console.log('[Gemini] Usando API REST, modelo:', GEMINI_MODEL);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -271,13 +340,44 @@ ${keywordsText}
 Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e bem estruturado.`;
 
   try {
-    // Usando a API REST oficial do Google Gemini
+    // Tentar usar o SDK oficial primeiro
+    try {
+      const client = new GoogleGenAI({ apiKey });
+      
+      console.log('[Gemini] Usando SDK oficial para conteúdo genérico, modelo:', GEMINI_MODEL);
+      
+      const interaction = await client.interactions.create({
+        model: GEMINI_MODEL,
+        input: prompt,
+      });
+      
+      const lastOutput = interaction.outputs[interaction.outputs.length - 1];
+      const fullContent = typeof lastOutput === 'string' 
+        ? lastOutput 
+        : (lastOutput as any)?.text || (lastOutput as any)?.content || '';
+      
+      if (!fullContent || typeof fullContent !== 'string') {
+        throw new Error('Resposta vazia ou inválida do SDK');
+      }
+      
+      // Gerar excerpt (primeiras 2-3 frases ou até 200 caracteres)
+      const excerpt = generateGenericExcerpt(fullContent, request.title);
+
+      return {
+        content: fullContent,
+        excerpt,
+      };
+    } catch (sdkError) {
+      // Se o SDK falhar (pode não funcionar no browser), usar API REST como fallback
+      console.warn('[Gemini] SDK falhou, usando API REST como fallback:', sdkError);
+      
+      // Continuar com implementação REST abaixo
+    }
+    
+    // Fallback: Usando a API REST oficial do Google Gemini
     const apiUrl = `${GEMINI_API_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     
-    console.log('[Gemini] Enviando requisição para conteúdo genérico:', {
-      model: GEMINI_MODEL,
-      title: request.title,
-    });
+    console.log('[Gemini] Usando API REST para conteúdo genérico, modelo:', GEMINI_MODEL);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
