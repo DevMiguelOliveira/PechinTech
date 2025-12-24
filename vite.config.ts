@@ -18,12 +18,12 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === "development" && componentTagger(),
       sitemapPlugin({
-        hostname: "https://pechintech.com",
+        hostname: "https://www.pechintech.com.br",
         changefreq: "daily",
         priority: 0.8,
         readable: true,
-        exclude: ["/admin/*", "/auth"],
-        dynamicRoutes: ["/"],
+        exclude: ["/admin/*", "/auth", "/auth/*"],
+        dynamicRoutes: ["/", "/blog"],
         generateRobotsTxt: false, // Já temos robots.txt manual
       }),
       isProduction &&

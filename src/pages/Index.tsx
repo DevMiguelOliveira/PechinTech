@@ -208,9 +208,54 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Promoções de Tecnologia"
-        description="Encontre as melhores promoções de tecnologia. Hardware, periféricos, games e smartphones com os menores preços. Vote nas ofertas e compartilhe com a comunidade!"
+        title="PechinTech | Site Oficial - Promoções de Tecnologia no Brasil"
+        description="PechinTech é o site oficial de promoções de tecnologia do Brasil. Encontre as melhores ofertas de hardware, games, smartphones e periféricos. Compare preços e economize com cupons exclusivos PechinTech. Vote nas melhores pechinchas e compartilhe com a comunidade!"
+        keywords="pechintech, pechintech.com.br, www.pechintech.com.br, promoções tecnologia, ofertas hardware, descontos games, promoções smartphones, notebooks baratos, placa de vídeo promoção, processador barato, memória RAM oferta, SSD promoção, monitor gamer, teclado mecânico, mouse gamer, headset promoção, PC gamer barato, pechinchas tecnologia, cupom desconto tecnologia"
         url="/"
+        structuredData={products.length > 0 ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          '@id': 'https://www.pechintech.com.br',
+          name: 'PechinTech | Site Oficial - Promoções de Tecnologia',
+          description: 'PechinTech é o site oficial de promoções de tecnologia do Brasil. Encontre as melhores ofertas de hardware, games, smartphones e periféricos.',
+          url: 'https://www.pechintech.com.br',
+          mainEntity: {
+            '@type': 'ItemList',
+            name: 'Promoções de Tecnologia',
+            description: 'Lista de produtos em promoção',
+            numberOfItems: products.length,
+            itemListElement: products.slice(0, 10).map((product, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              item: {
+                '@type': 'Product',
+                name: product.title,
+                description: product.description.substring(0, 160),
+                image: product.image_url,
+                category: product.category,
+                offers: {
+                  '@type': 'Offer',
+                  price: product.current_price,
+                  priceCurrency: 'BRL',
+                  availability: 'https://schema.org/InStock',
+                  url: product.affiliate_url,
+                  priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  seller: {
+                    '@type': 'Organization',
+                    name: product.store || 'Loja Parceira',
+                  },
+                },
+                aggregateRating: product.hot_votes + product.cold_votes > 0 ? {
+                  '@type': 'AggregateRating',
+                  ratingValue: ((product.hot_votes / (product.hot_votes + product.cold_votes)) * 5).toFixed(1),
+                  reviewCount: product.hot_votes + product.cold_votes,
+                  bestRating: '5',
+                  worstRating: '1',
+                } : undefined,
+              },
+            })),
+          },
+        } : undefined}
       />
       
       {/* Header */}

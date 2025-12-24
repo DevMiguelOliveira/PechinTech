@@ -4,6 +4,19 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "pechintech.com.br"
+        }
+      ],
+      "destination": "https://www.pechintech.com.br/:path*",
+      "permanent": true
+    }
   ]
 }
 

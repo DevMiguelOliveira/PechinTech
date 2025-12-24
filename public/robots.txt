@@ -1,58 +1,118 @@
 # Robots.txt para PechinTech
-# https://pechintech.com/robots.txt
+# https://www.pechintech.com.br/robots.txt
+# Última atualização: 2024
 
-# Permissões para principais crawlers
+# Permissões para Googlebot
 User-agent: Googlebot
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 Disallow: /admin/
+Disallow: /admin/*
 Disallow: /auth
+Disallow: /auth/*
+Disallow: /*.json$
+Disallow: /*?*sort=*
+Disallow: /*?*filter=*
 Crawl-delay: 1
 
+# Permissões para Googlebot-Image
+User-agent: Googlebot-Image
+Allow: /
+Allow: /blog/
+Disallow: /admin/
+Disallow: /auth
+
+# Permissões para Bingbot
 User-agent: Bingbot
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 Disallow: /admin/
+Disallow: /admin/*
 Disallow: /auth
+Disallow: /auth/*
+Disallow: /*.json$
 Crawl-delay: 1
 
+# Permissões para Slurp (Yahoo)
 User-agent: Slurp
 Allow: /
+Allow: /blog/
 Disallow: /admin/
 Disallow: /auth
 Crawl-delay: 1
 
+# Permissões para DuckDuckBot
 User-agent: DuckDuckBot
 Allow: /
+Allow: /blog/
 Disallow: /admin/
 Disallow: /auth
 
+# Permissões para Baiduspider
 User-agent: Baiduspider
 Allow: /
+Allow: /blog/
 Disallow: /admin/
 Disallow: /auth
+Crawl-delay: 2
 
-# Social Media Bots
+# Permissões para Yandex
+User-agent: Yandex
+Allow: /
+Allow: /blog/
+Disallow: /admin/
+Disallow: /auth
+Crawl-delay: 1
+
+# Social Media Bots - Permitir acesso completo
 User-agent: Twitterbot
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 
 User-agent: facebookexternalhit
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 
 User-agent: LinkedInBot
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 
 User-agent: WhatsApp
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 
 User-agent: TelegramBot
 Allow: /
+Allow: /blog/
+Allow: /blog/*
 
-# Regras gerais
-User-agent: *
+User-agent: Applebot
 Allow: /
+Allow: /blog/
 Disallow: /admin/
 Disallow: /auth
-Disallow: /*.json$
-Disallow: /*?*
 
-# Sitemap
-Sitemap: https://pechintech.com/sitemap.xml
+# Regras gerais para todos os outros bots
+User-agent: *
+Allow: /
+Allow: /blog/
+Allow: /blog/*
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /auth
+Disallow: /auth/*
+Disallow: /*.json$
+Disallow: /*?*api*
+Disallow: /*?*token*
+Disallow: /*?*key*
+Crawl-delay: 2
+
+# Sitemaps
+Sitemap: https://www.pechintech.com.br/sitemap.xml
+Sitemap: https://www.pechintech.com.br/sitemap-blog.xml

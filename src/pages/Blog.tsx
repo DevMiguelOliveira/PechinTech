@@ -4,6 +4,7 @@ import { usePublishedBlogPosts } from '@/hooks/useBlogPosts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEO } from '@/components/SEO';
 import { Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -50,6 +51,42 @@ const Blog = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEO
+        title="Blog de Tecnologia - Artigos e Novidades"
+        description="Acompanhe as últimas novidades, dicas e análises sobre tecnologia, hardware, games e produtos. Artigos exclusivos sobre promoções e tendências do mercado tech."
+        keywords="blog tecnologia, artigos tecnologia, novidades tech, dicas hardware, análises produtos, promoções tecnologia, tendências tech, reviews produtos"
+        url="/blog"
+        type="website"
+        breadcrumbs={[
+          { name: 'Início', url: '/' },
+          { name: 'Blog', url: '/blog' },
+        ]}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Blog',
+          '@id': 'https://pechintech.com.br/blog',
+          name: 'Blog PechinTech',
+          description: 'Artigos e novidades sobre tecnologia, hardware, games e produtos',
+          url: 'https://pechintech.com.br/blog',
+          publisher: {
+            '@type': 'Organization',
+            name: 'PechinTech',
+            url: 'https://pechintech.com.br',
+          },
+          blogPost: posts?.map((post) => ({
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.excerpt || post.title,
+            url: `https://pechintech.com.br/blog/${post.slug}`,
+            datePublished: post.created_at,
+            author: post.profiles?.username ? {
+              '@type': 'Person',
+              name: post.profiles.username,
+            } : undefined,
+          })) || [],
+        }}
+      />
+      
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-center mb-4">Blog</h1>
         <p className="text-muted-foreground text-center">
