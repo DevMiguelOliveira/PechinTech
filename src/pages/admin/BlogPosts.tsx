@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { BulkCreateBlogPosts } from '@/components/admin/BulkCreateBlogPosts';
-import { Plus, Edit, Trash2, Eye, EyeOff, Sparkles, Loader2 } from 'lucide-react';
+import { GeradorIA } from '@/components/GeradorIA';
+import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
-import { generateGenericBlogContent, getGeminiApiKey } from '@/services/gemini';
 import { toast } from '@/hooks/use-toast';
 
 const BlogPosts = () => {
@@ -27,9 +27,6 @@ const BlogPosts = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
-  const [geminiTopic, setGeminiTopic] = useState('');
-  const [geminiDescription, setGeminiDescription] = useState('');
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<BlogPostFormData>();
   const watchedContent = watch('content');
@@ -92,106 +89,8 @@ const BlogPosts = () => {
   const closeCreateDialog = () => {
     setIsCreateDialogOpen(false);
     reset();
-    setGeminiTopic('');
-    setGeminiDescription('');
   };
 
-  const handleGenerateContent = async () => {
-    const title = watchedTitle || geminiTopic;
-    
-    if (!title || title.trim() === '') {
-      toast({
-        title: 'Título necessário',
-        description: 'Informe um título no campo acima ou um tema/tópico para gerar o conteúdo.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Verificar se a API Key está configurada usando a função exportada
-    // Verificar diretamente também para ter mais informações de debug
-    const rawEnvKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const apiKey = getGeminiApiKey();
-    
-    console.log('[BlogPosts] Verificando API Key:', {
-      hasRawKey: !!rawEnvKey,
-      rawKeyType: typeof rawEnvKey,
-      rawKeyLength: rawEnvKey?.length || 0,
-      hasValidKey: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      envKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
-      allViteKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
-      rawKeyPreview: rawEnvKey ? `${rawEnvKey.substring(0, 10)}...` : 'não encontrada',
-    });
-    
-    if (!apiKey) {
-      // Verificar se a chave existe mas não passou na validação
-      if (rawEnvKey) {
-        console.warn('[BlogPosts] API Key encontrada mas inválida:', {
-          length: rawEnvKey.trim().length,
-          value: rawEnvKey.substring(0, 20) + '...',
-        });
-        toast({
-          title: 'API Key inválida',
-          description: `A API Key foi encontrada mas não passou na validação. Verifique se está correta no arquivo .env e reinicie o servidor.`,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'API Key não configurada',
-          description: 'Configure VITE_GEMINI_API_KEY no arquivo .env e REINICIE o servidor (Ctrl+C e depois npm run dev) para usar esta funcionalidade.',
-          variant: 'destructive',
-        });
-        console.error('[BlogPosts] API Key não encontrada. Diagnóstico:');
-        console.error('1. Verifique se o arquivo .env existe na raiz do projeto');
-        console.error('2. Verifique se a variável VITE_GEMINI_API_KEY está definida');
-        console.error('3. IMPORTANTE: O servidor DEVE ser REINICIADO após adicionar/modificar variáveis no .env');
-        console.error('4. Pare o servidor (Ctrl+C) e execute: npm run dev');
-        console.error('5. Limpe o cache do navegador (Ctrl+Shift+R)');
-      }
-      return;
-    }
-
-    setIsGeneratingContent(true);
-
-    try {
-      const response = await generateGenericBlogContent({
-        title: title,
-        topic: geminiTopic || title,
-        description: geminiDescription || undefined,
-        wordCount: 1000,
-      });
-
-      if (response.error) {
-        toast({
-          title: 'Erro ao gerar conteúdo',
-          description: response.error,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (response.content) {
-        setValue('content', response.content);
-        if (response.excerpt) {
-          setValue('excerpt', response.excerpt);
-        }
-        toast({
-          title: 'Conteúdo gerado com sucesso!',
-          description: 'O conteúdo foi gerado pela IA. Revise e ajuste conforme necessário antes de salvar.',
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao gerar conteúdo:', error);
-      toast({
-        title: 'Erro ao gerar conteúdo',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsGeneratingContent(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -280,83 +179,47 @@ const BlogPosts = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Conteúdo (Markdown)</Label>
-                  <div className="flex items-center gap-2">
-                    {!getGeminiApiKey() && (
-                      <div className="text-xs text-muted-foreground mr-2">
-                        ⚠️ API Key não detectada
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerateContent}
-                      disabled={isGeneratingContent || (!watchedTitle && !geminiTopic)}
-                      className="gap-2"
-                    >
-                      {isGeneratingContent ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Gerando...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          Gerar com Gemini AI
-                        </>
-                      )}
-                    </Button>
-                  </div>
                 </div>
-                {!watchedTitle && (
-                  <div className="mb-2 p-3 bg-muted/50 rounded-md border border-border">
-                    <Label htmlFor="gemini-topic" className="text-sm font-medium mb-2 block">
-                      Tema/Tópico (para gerar conteúdo com IA)
-                    </Label>
-                    <Input
-                      id="gemini-topic"
-                      value={geminiTopic}
-                      onChange={(e) => setGeminiTopic(e.target.value)}
-                      placeholder="Ex: Como escolher a melhor placa de vídeo"
-                      className="mb-2"
-                    />
-                    <Textarea
-                      value={geminiDescription}
-                      onChange={(e) => setGeminiDescription(e.target.value)}
-                      placeholder="Descrição adicional ou contexto (opcional)..."
-                      rows={2}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Ou preencha o campo "Título" acima e use o botão "Gerar com Gemini AI"
-                    </p>
-                  </div>
-                )}
-                {!getGeminiApiKey() && (
-                  <div className="mb-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
-                    <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400 mb-2">
-                      ⚠️ API Key não detectada
-                    </p>
-                    <p className="text-xs text-yellow-600 dark:text-yellow-500 mb-2">
-                      A API Key está no arquivo .env, mas o servidor precisa ser <strong>reiniciado</strong> para carregá-la.
-                    </p>
-                    <div className="text-xs text-yellow-600 dark:text-yellow-500 space-y-1">
-                      <p><strong>Para resolver:</strong></p>
-                      <ol className="list-decimal list-inside space-y-1 ml-2">
-                        <li>Pare o servidor (Ctrl+C no terminal onde está rodando)</li>
-                        <li>Execute: <code className="bg-yellow-500/20 px-1 rounded">npm run dev</code></li>
-                        <li>Recarregue esta página (Ctrl+Shift+R)</li>
-                      </ol>
-                    </div>
-                  </div>
-                )}
+                
+                {/* Gerador de IA */}
+                <div className="mb-4">
+                  <GeradorIA
+                    initialTema={watchedTitle || ''}
+                    onContentGenerated={(content) => {
+                      setValue('content', content);
+                      
+                      // Gerar excerpt automaticamente se não estiver preenchido
+                      const currentExcerpt = watch('excerpt');
+                      if (!currentExcerpt || currentExcerpt.trim().length === 0) {
+                        // Extrair primeiro parágrafo ou primeiras 200 caracteres
+                        const plainText = content
+                          .replace(/^#+\s+/gm, '')
+                          .replace(/\*\*/g, '')
+                          .replace(/\*/g, '')
+                          .trim();
+                        const firstParagraph = plainText.split('\n\n')[0] || plainText.substring(0, 200);
+                        const excerpt = firstParagraph.length > 200 
+                          ? firstParagraph.substring(0, 197) + '...' 
+                          : firstParagraph;
+                        setValue('excerpt', excerpt);
+                      }
+                      
+                      toast({
+                        title: 'Conteúdo gerado!',
+                        description: 'O conteúdo e resumo foram preenchidos automaticamente. Revise antes de salvar.',
+                      });
+                    }}
+                  />
+                </div>
+
                 <Textarea
                   {...register('content', { required: 'Conteúdo é obrigatório' })}
-                  placeholder="Escreva o conteúdo do post em Markdown ou use o botão acima para gerar com IA..."
+                  placeholder="Escreva o conteúdo do post em Markdown ou use o gerador de IA acima..."
                   rows={10}
                 />
                 {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Você pode escrever manualmente ou usar o botão "Gerar com Gemini AI" para criar conteúdo automaticamente.
+                  Escreva o conteúdo do post em formato Markdown ou use o gerador de IA acima.
                 </p>
               </div>
 

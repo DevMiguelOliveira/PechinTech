@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateBlogPost } from '@/hooks/useBlogPosts';
 import { useActiveProducts } from '@/hooks/useProducts';
 import { supabase } from '@/services/supabase/client';
-import { generateBlogPostContent, getGeminiApiKey } from '@/services/gemini';
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -21,7 +20,7 @@ function generateSlug(title: string): string {
 }
 
 /**
- * Gera conteúdo de template quando a API Key do Gemini não está disponível
+ * Gera conteúdo de template para posts de blog
  */
 function generateTemplateContent(product: any): string {
   const price = Number(product.current_price).toLocaleString('pt-BR', {
@@ -842,11 +841,10 @@ export function BulkCreateBlogPosts() {
   const [results, setResults] = useState<Array<{ title: string; status: 'success' | 'error' | 'skipped'; message: string }>>([]);
   const [tableExists, setTableExists] = useState<boolean | null>(null);
   const [tableCheckError, setTableCheckError] = useState<string | null>(null);
-  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const createPost = useCreateBlogPost();
   const { data: products, isLoading: isLoadingProducts } = useActiveProducts();
 
-  // Verificar se a tabela existe e se a API key do Gemini está configurada
+  // Verificar se a tabela existe
   useEffect(() => {
     const checkTable = async () => {
       try {
@@ -873,27 +871,6 @@ export function BulkCreateBlogPosts() {
       }
     };
 
-    // Verificar se a API key do Gemini está configurada usando a função exportada
-    const validKey = getGeminiApiKey();
-    
-    console.log('[BulkCreateBlogPosts] Verificando API Key do Gemini:', {
-      hasKey: !!validKey,
-      keyLength: validKey?.length || 0,
-      keyPreview: validKey ? `${validKey.substring(0, 10)}...${validKey.substring(validKey.length - 4)}` : 'não encontrada',
-      allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
-      envKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
-    });
-    
-    setGeminiApiKey(validKey);
-    
-    if (!validKey) {
-      console.warn('[BulkCreateBlogPosts] API Key não configurada. Verifique:');
-      console.warn('1. Se o arquivo .env existe na raiz do projeto');
-      console.warn('2. Se a variável VITE_GEMINI_API_KEY está definida');
-      console.warn('3. Se o servidor foi REINICIADO após adicionar a variável');
-      console.warn('4. Abra o console do navegador (F12) para ver mais detalhes');
-    }
-
     checkTable();
   }, []);
 
@@ -907,14 +884,6 @@ export function BulkCreateBlogPosts() {
       return;
     }
 
-    // Verificar novamente a API Key (pode ter sido atualizada)
-    // Nota: A API Key é opcional - se não estiver disponível, usaremos templates
-    const currentApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    const hasValidKey = currentApiKey && currentApiKey.length > 10 && !currentApiKey.includes('sua_chave');
-    
-    if (!hasValidKey) {
-      console.log('[BulkCreateBlogPosts] API Key não disponível, usando templates pré-definidos');
-    }
 
     if (!products || products.length === 0) {
       toast({
@@ -964,35 +933,9 @@ export function BulkCreateBlogPosts() {
       }
 
       try {
-        // Verificar API Key novamente antes de usar
-        const currentApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-        // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
-        const hasValidKey = currentApiKey && currentApiKey.length >= 20 && !currentApiKey.includes('sua_chave') && !currentApiKey.includes('your_api_key');
-        
-        let content = '';
-        let excerpt = '';
-        
-        if (hasValidKey) {
-          // Gerar conteúdo com Gemini
-          const geminiResponse = await generateBlogPostContent({
-            productTitle: product.title,
-            productDescription: product.description || product.title,
-            productPrice: Number(product.current_price),
-            productCategory: product.categories?.name || product.store || 'Tecnologia',
-            affiliateUrl: product.affiliate_url,
-          });
-
-          if (geminiResponse.error || !geminiResponse.content) {
-            throw new Error(geminiResponse.error || 'Erro ao gerar conteúdo com Gemini');
-          }
-
-          content = geminiResponse.content;
-          excerpt = geminiResponse.excerpt || `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`;
-        } else {
-          // Usar template genérico quando API Key não estiver disponível
-          content = generateTemplateContent(product);
-          excerpt = `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`;
-        }
+        // Usar template genérico
+        const content = generateTemplateContent(product);
+        const excerpt = `Descubra tudo sobre ${product.title}. Análise completa, características e onde comprar com o melhor preço.`;
 
         // Criar post
         await createPost.mutateAsync({
@@ -1015,8 +958,8 @@ export function BulkCreateBlogPosts() {
         if (error?.message) {
           if (error.message.includes('Could not find the table') || error.message.includes('relation') || error.code === 'PGRST116') {
             errorMessage = 'Tabela blog_posts não existe. Execute as migrations.';
-          } else if (error.message.includes('VITE_GEMINI_API_KEY')) {
-            errorMessage = 'API Key do Gemini não configurada.';
+          } else if (error.message.includes('VITE_OPENAI_API_KEY')) {
+            errorMessage = 'API Key do OpenAI não configurada.';
           } else {
             errorMessage = error.message;
           }
@@ -1076,50 +1019,13 @@ export function BulkCreateBlogPosts() {
           </Alert>
         )}
 
-        {!geminiApiKey && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>API Key do Google Gemini não configurada (Opcional)</AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>
-                Para gerar conteúdo <strong>automaticamente com IA</strong>, configure a variável de ambiente{' '}
-                <code className="bg-muted px-1 rounded text-xs">VITE_GEMINI_API_KEY</code> no arquivo{' '}
-                <code className="bg-muted px-1 rounded text-xs">.env</code>.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                <strong>Nota:</strong> Mesmo sem a API Key, você pode criar posts usando templates pré-definidos. 
-                A API Key é opcional, mas recomendada para conteúdo mais rico e personalizado.
-              </p>
-              <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                <strong>Como obter a API Key (opcional):</strong>
-                <ol className="list-decimal list-inside space-y-1 mt-1">
-                  <li>Acesse <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Google AI Studio</a></li>
-                  <li>Faça login com sua conta Google</li>
-                  <li>Clique em "Create API Key" ou "Get API Key"</li>
-                  <li>Copie a chave gerada</li>
-                  <li>Adicione no arquivo <code className="bg-muted px-1 rounded">.env</code> na raiz do projeto:</li>
-                  <li className="ml-4"><code className="bg-muted px-1 rounded">VITE_GEMINI_API_KEY=sua_chave_aqui</code></li>
-                  <li><strong>IMPORTANTE:</strong> Reinicie o servidor de desenvolvimento após adicionar a chave</li>
-                </ol>
-              </div>
-              <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs">
-                <strong>💡 Dica:</strong> Se você já configurou a API Key mas ainda vê este aviso, 
-                certifique-se de ter <strong>reiniciado o servidor</strong> após adicionar a variável no arquivo .env.
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {isLoadingProducts ? (
           <div className="text-sm text-muted-foreground">Carregando produtos...</div>
         ) : (
           <p className="text-sm text-muted-foreground">
             Este recurso cria automaticamente posts de blog baseados nos produtos existentes no site.
-            {geminiApiKey ? (
-              <span> Usando <strong>Google Gemini AI</strong> para gerar conteúdo profissional.</span>
-            ) : (
-              <span> Usando <strong>templates pré-definidos</strong> (configure a API Key do Gemini para conteúdo gerado por IA).</span>
-            )}
+            <span> Usando <strong>templates pré-definidos</strong> para criar posts.</span>
             {' '}Serão criados posts para até 10 produtos que ainda não possuem post associado.
             {products && products.length > 0 && (
               <span className="block mt-1 font-semibold">
