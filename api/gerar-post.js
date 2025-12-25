@@ -40,17 +40,22 @@ export default async function handler(req, res) {
 
   // Obter chave da API do ambiente (apenas no backend)
   // Tentar múltiplas variáveis de ambiente para compatibilidade
+  // FALLBACK: Se nenhuma variável estiver configurada, usar a chave fornecida (apenas para desenvolvimento)
   const apiKey = process.env.GEMINI_API_KEY 
     || process.env.VITE_GEMINI_API_KEY 
-    || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+    || 'AIzaSyDxtqMoWu7HpLdsUiYIytffFk91_Rz7QVQ'; // Fallback temporário - REMOVER EM PRODUÇÃO
 
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'sua_chave_aqui' || apiKey === '') {
     console.error('[API] GEMINI_API_KEY não configurada no ambiente');
     console.error('[API] Variáveis de ambiente disponíveis:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
     return res.status(500).json({ 
       error: 'API Key do Gemini não configurada. Configure a variável GEMINI_API_KEY no Vercel ou no arquivo .env.local.' 
     });
   }
+
+  // Log de segurança (não logar a chave completa)
+  console.log('[API] API Key do Gemini detectada:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NÃO ENCONTRADA');
 
   // Construir prompt otimizado para SEO e marketing de afiliados
   const keywordsText = palavrasChave && palavrasChave.length > 0
