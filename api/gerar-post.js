@@ -110,13 +110,11 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e 
       });
     }
 
-    // Tentar múltiplos modelos (ordem: mais recentes primeiro)
+    // Tentar múltiplos modelos (ordem: mais estáveis primeiro)
+    // Usar apenas modelos que estão disponíveis e suportam generateContent
     const models = [
       'gemini-1.5-flash',
       'gemini-1.5-pro',
-      'gemini-pro',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
     ];
 
     let lastError = null;
@@ -125,10 +123,13 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e 
 
     // Tentar cada modelo até um funcionar
     for (const model of models) {
+      // Usar apenas v1beta (mais estável e com mais modelos disponíveis)
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanApiKey)}`;
+        const geminiUrl = `${endpoint}?key=${encodeURIComponent(cleanApiKey)}`;
         
-        console.log(`[API] Tentando modelo: ${model}`);
+        console.log(`[API] Tentando modelo: ${model} (v1beta)`);
         
         response = await fetch(geminiUrl, {
           method: 'POST',

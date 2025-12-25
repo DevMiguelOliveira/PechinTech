@@ -299,10 +299,10 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
     }
 
     // Tentar múltiplos modelos (ordem: mais estáveis primeiro)
+    // Usar apenas modelos que estão disponíveis e suportam generateContent
     const models = [
       'gemini-1.5-flash',
       'gemini-1.5-pro',
-      'gemini-pro',
     ];
 
     let lastError = null;
@@ -312,9 +312,9 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
     // Tentar cada modelo até um funcionar
     for (const model of models) {
       // Tentar múltiplos endpoints para cada modelo
+      // v1beta é mais estável e tem mais modelos disponíveis
       const endpoints = [
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent`,
       ];
       
       for (const endpoint of endpoints) {
