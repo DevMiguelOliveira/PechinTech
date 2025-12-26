@@ -142,27 +142,18 @@ const ProductForm = ({
           description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
         });
       } else {
-        // Silenciar erro - não mostrar toast para falhas na busca automática
-        // É uma funcionalidade opcional e não deve incomodar o usuário
-        // Apenas preencher o campo de loja automaticamente se possível
-        try {
-          const urlObj = new URL(previewUrl);
-          const hostname = urlObj.hostname.replace(/^www\./, '');
-          const storeName = hostname.split('.')[0];
-          if (storeName && storeName.length > 2) {
-            setForm((prev) => ({
-              ...prev,
-              affiliate_url: previewUrl,
-              store: storeName.charAt(0).toUpperCase() + storeName.slice(1),
-            }));
-          }
-        } catch {
-          // Ignorar erro de parsing de URL
-        }
+        toast({
+          title: 'Não foi possível extrair',
+          description: result.error || 'Tente preencher os campos manualmente.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      // Silenciar completamente - não mostrar nenhum erro
-      // A busca automática é opcional e não deve bloquear o usuário
+      toast({
+        title: 'Erro na busca',
+        description: 'Ocorreu um erro ao buscar informações. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setIsFetchingPreview(false);
     }

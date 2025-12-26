@@ -42,10 +42,6 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
   }
 
   try {
-    // Criar AbortController para timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
-
     const response = await fetch(LINK_PREVIEW_API_URL, {
       method: 'POST',
       headers: {
@@ -53,21 +49,18 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ q: url }),
-      signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 429) {
         return {
           success: false,
-          error: 'Limite de requisições atingido',
+          error: 'Limite de requisições atingido. Tente novamente em alguns minutos.',
         };
       }
       return {
         success: false,
-        error: 'Serviço temporariamente indisponível',
+        error: `Erro na API: ${response.status}`,
       };
     }
 
@@ -77,7 +70,7 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
     if (!data || (!data.title && !data.description && !data.image)) {
       return {
         success: false,
-        error: 'Informações não disponíveis',
+        error: 'Não foi possível extrair informações desta URL',
       };
     }
 
@@ -92,21 +85,10 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
       },
     };
   } catch (error) {
-    // Silenciar erros - não logar para não poluir o console
-    // A busca automática é opcional e não deve bloquear o usuário
-    
-    // Se for erro de abort (timeout), retornar erro silencioso
-    if (error instanceof Error && error.name === 'AbortError') {
-      return {
-        success: false,
-        error: 'Tempo de resposta excedido',
-      };
-    }
-    
-    // Para qualquer outro erro, retornar erro genérico e silencioso
+    console.error('Erro ao buscar link preview:', error);
     return {
       success: false,
-      error: 'Serviço indisponível',
+      error: 'Erro de conexão. Verifique sua internet.',
     };
   }
 }
