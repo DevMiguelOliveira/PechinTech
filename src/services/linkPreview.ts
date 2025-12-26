@@ -42,6 +42,10 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
   }
 
   try {
+    // Criar AbortController para timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+
     const response = await fetch(LINK_PREVIEW_API_URL, {
       method: 'POST',
       headers: {
@@ -49,18 +53,21 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ q: url }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 429) {
         return {
           success: false,
-          error: 'Limite de requisições atingido. Tente novamente em alguns minutos.',
+          error: 'Limite de requisições atingido',
         };
       }
       return {
         success: false,
-        error: `Erro na API: ${response.status}`,
+        error: 'Serviço temporariamente indisponível',
       };
     }
 
@@ -70,7 +77,7 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
     if (!data || (!data.title && !data.description && !data.image)) {
       return {
         success: false,
-        error: 'Não foi possível extrair informações desta URL',
+        error: 'Informações não disponíveis',
       };
     }
 
@@ -85,19 +92,21 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
       },
     };
   } catch (error) {
-    console.error('Erro ao buscar link preview:', error);
+    // Silenciar erros - não logar para não poluir o console
+    // A busca automática é opcional e não deve bloquear o usuário
     
-    // Mensagens de erro mais específicas
-    if (error instanceof TypeError && error.message.includes('fetch')) {
+    // Se for erro de abort (timeout), retornar erro silencioso
+    if (error instanceof Error && error.name === 'AbortError') {
       return {
         success: false,
-        error: 'Erro de conexão. Verifique sua internet e tente novamente.',
+        error: 'Tempo de resposta excedido',
       };
     }
     
+    // Para qualquer outro erro, retornar erro genérico e silencioso
     return {
       success: false,
-      error: 'Não foi possível conectar ao serviço de busca automática. Você pode preencher os campos manualmente.',
+      error: 'Serviço indisponível',
     };
   }
 }

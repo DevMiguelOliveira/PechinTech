@@ -142,22 +142,27 @@ const ProductForm = ({
           description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
         });
       } else {
-        // Não mostrar erro destrutivo para falha na busca automática
-        // É apenas uma funcionalidade opcional
-        toast({
-          title: 'Busca automática indisponível',
-          description: result.error || 'Você pode preencher os campos manualmente.',
-          variant: 'default',
-        });
+        // Silenciar erro - não mostrar toast para falhas na busca automática
+        // É uma funcionalidade opcional e não deve incomodar o usuário
+        // Apenas preencher o campo de loja automaticamente se possível
+        try {
+          const urlObj = new URL(previewUrl);
+          const hostname = urlObj.hostname.replace(/^www\./, '');
+          const storeName = hostname.split('.')[0];
+          if (storeName && storeName.length > 2) {
+            setForm((prev) => ({
+              ...prev,
+              affiliate_url: previewUrl,
+              store: storeName.charAt(0).toUpperCase() + storeName.slice(1),
+            }));
+          }
+        } catch {
+          // Ignorar erro de parsing de URL
+        }
       }
     } catch (error) {
-      console.error('Erro ao buscar link preview:', error);
-      // Não mostrar erro destrutivo - é apenas uma funcionalidade opcional
-      toast({
-        title: 'Busca automática indisponível',
-        description: 'Você pode preencher os campos manualmente.',
-        variant: 'default',
-      });
+      // Silenciar completamente - não mostrar nenhum erro
+      // A busca automática é opcional e não deve bloquear o usuário
     } finally {
       setIsFetchingPreview(false);
     }
