@@ -31,9 +31,14 @@ interface MobileFiltersProps {
 
 // Organiza categorias em hierarquia
 function organizeCategoriesHierarchy(categories: DbCategory[]) {
-  const rootCategories = categories.filter((cat) => !cat.parent_id);
+  // Filtrar categorias raiz (sem parent_id) e ordenar por nome
+  const rootCategories = categories
+    .filter((cat) => !cat.parent_id)
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  
   const subcategoriesMap = new Map<string, DbCategory[]>();
 
+  // Agrupar subcategorias por parent_id e ordenar por nome
   categories.forEach((cat) => {
     if (cat.parent_id) {
       if (!subcategoriesMap.has(cat.parent_id)) {
@@ -41,6 +46,14 @@ function organizeCategoriesHierarchy(categories: DbCategory[]) {
       }
       subcategoriesMap.get(cat.parent_id)!.push(cat);
     }
+  });
+
+  // Ordenar subcategorias por nome
+  subcategoriesMap.forEach((subcats, parentId) => {
+    subcategoriesMap.set(
+      parentId,
+      subcats.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    );
   });
 
   return { rootCategories, subcategoriesMap };
@@ -164,9 +177,15 @@ export function MobileFilters({
                       }}
                       aria-pressed={selectedCategory === null}
                       aria-label="Mostrar todas as categorias"
-                      className="w-full focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className={cn(
+                        'w-full focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all',
+                        selectedCategory === null && 'shadow-md'
+                      )}
                     >
-                      Todas as categorias
+                      <span className="flex items-center gap-2">
+                        <Home className="h-4 w-4" />
+                        <span>Todas as categorias</span>
+                      </span>
                     </Button>
                     {categoriesLoading ? (
                       <div className="space-y-2">
@@ -206,17 +225,22 @@ export function MobileFilters({
                                   variant={isSelected ? 'default' : 'outline'}
                                   size="sm"
                                   className={cn(
-                                    'flex-1 justify-start',
+                                    'flex-1 justify-start transition-all',
                                     'focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                                    !hasSubcategories && 'ml-9'
+                                    !hasSubcategories && 'ml-9',
+                                    isSelected && 'shadow-md font-medium'
                                   )}
                                   onClick={() => {
                                     onSelectCategory(category.slug as Category);
+                                    setIsOpen(false);
                                   }}
                                   aria-pressed={isSelected}
                                   aria-label={`Filtrar por ${category.name}`}
                                 >
-                                  {category.name}
+                                  <span className="flex items-center gap-2">
+                                    {isSelected && <span>●</span>}
+                                    <span>{category.name}</span>
+                                  </span>
                                 </Button>
                               </div>
                               {hasSubcategories && isExpanded && (
@@ -229,17 +253,25 @@ export function MobileFilters({
                                         variant={isSubSelected ? 'default' : 'outline'}
                                         size="sm"
                                         className={cn(
-                                          'w-full justify-start text-sm',
-                                          'focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                                          'w-full justify-start text-sm transition-all',
+                                          'focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                                          isSubSelected && 'shadow-md font-medium'
                                         )}
                                         onClick={() => {
                                           onSelectCategory(subcategory.slug as Category);
+                                          setIsOpen(false);
                                         }}
                                         aria-pressed={isSubSelected}
                                         aria-label={`Filtrar por ${subcategory.name}`}
                                       >
-                                        <span className="text-muted-foreground mr-2">└─</span>
-                                        {subcategory.name}
+                                        <span className="flex items-center gap-2">
+                                          <span className={cn(
+                                            'text-muted-foreground transition-colors',
+                                            isSubSelected && 'text-primary'
+                                          )}>└─</span>
+                                          {isSubSelected && <span className="text-xs">●</span>}
+                                          <span>{subcategory.name}</span>
+                                        </span>
                                       </Button>
                                     );
                                   })}

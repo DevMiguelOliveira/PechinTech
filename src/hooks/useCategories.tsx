@@ -25,7 +25,8 @@ export function useCategories() {
       const { data: categoriesData, error } = await supabase
         .from('categories')
         .select('*')
-        .order('name');
+        .order('parent_id', { ascending: true, nullsFirst: true })
+        .order('name', { ascending: true });
 
       if (error) throw error;
 

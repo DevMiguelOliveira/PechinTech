@@ -18,35 +18,42 @@ import { useVote } from '@/hooks/useVotes';
 import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { useComments, useAddComment, useDeleteComment } from '@/hooks/useComments';
 import { useTrackPageView } from '@/hooks/usePageViews';
+import { useCategories, DbCategory } from '@/hooks/useCategories';
 import { Product, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { trackSearch, trackCategoryFilter } from '@/services/analytics';
 
 // Transform DB product to UI product
-const mapDbProductToProduct = (p: DbProduct): Product => ({
-  id: p.id,
-  title: p.title,
-  description: p.description,
-  image_url: p.image_url,
-  current_price: Number(p.current_price),
-  original_price: Number(p.original_price),
-  affiliate_url: p.affiliate_url,
-  category: p.categories?.slug || 'hardware',
-  temperature: p.temperature,
-  hot_votes: p.hot_votes,
-  cold_votes: p.cold_votes,
-  comments_count: p.comments_count,
-  store: p.store,
-  created_at: p.created_at,
-  specs: p.specs,
-  coupon_code: p.coupon_code,
-});
+const mapDbProductToProduct = (p: DbProduct): Product => {
+  // Garantir que sempre temos um slug de categoria válido
+  const categorySlug = p.categories?.slug?.toLowerCase().trim() || 'hardware';
+  
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    image_url: p.image_url,
+    current_price: Number(p.current_price),
+    original_price: Number(p.original_price),
+    affiliate_url: p.affiliate_url,
+    category: categorySlug as Category,
+    temperature: p.temperature,
+    hot_votes: p.hot_votes,
+    cold_votes: p.cold_votes,
+    comments_count: p.comments_count,
+    store: p.store,
+    created_at: p.created_at,
+    specs: p.specs,
+    coupon_code: p.coupon_code,
+  };
+};
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: dbProducts, isLoading } = useActiveProducts();
+  const { data: categories } = useCategories();
   
   // Rastrear visita na página
   useTrackPageView('/');
@@ -55,6 +62,45 @@ const Index = () => {
     if (!dbProducts) return [];
     return dbProducts.map((p) => mapDbProductToProduct(p));
   }, [dbProducts]);
+
+  // Criar mapa de hierarquia de categorias para filtro inteligente
+  const categoryHierarchy = useMemo(() => {
+    if (!categories) return { rootToSubcategories: new Map<string, Set<string>>(), allSlugs: new Set<string>() };
+    
+    const rootToSubcategories = new Map<string, Set<string>>();
+    const allSlugs = new Set<string>();
+    
+    // Criar mapa de categorias por slug
+    const categoriesBySlug = new Map<string, DbCategory>();
+    categories.forEach(cat => {
+      categoriesBySlug.set(cat.slug, cat);
+      allSlugs.add(cat.slug);
+    });
+    
+    // Para cada categoria raiz, encontrar todas as subcategorias
+    categories.forEach(cat => {
+      if (!cat.parent_id) {
+        // É uma categoria raiz
+        const subcategorySlugs = new Set<string>([cat.slug]); // Inclui a própria categoria raiz
+        
+        // Encontrar todas as subcategorias diretas e indiretas
+        const findSubcategories = (parentId: string) => {
+          categories.forEach(subcat => {
+            if (subcat.parent_id === parentId) {
+              subcategorySlugs.add(subcat.slug);
+              // Recursivamente encontrar subcategorias desta subcategoria
+              findSubcategories(subcat.id);
+            }
+          });
+        };
+        
+        findSubcategories(cat.id);
+        rootToSubcategories.set(cat.slug, subcategorySlugs);
+      }
+    });
+    
+    return { rootToSubcategories, allSlugs };
+  }, [categories]);
 
   // Favorites
   const { data: favoritesSet } = useFavorites();
@@ -96,8 +142,26 @@ const Index = () => {
     }
 
     // Category filter (usa slug da categoria)
+    // Se for categoria raiz, inclui produtos da categoria e todas as subcategorias
     if (selectedCategory) {
-      result = result.filter((p) => p.category === selectedCategory);
+      const selectedCategorySlug = selectedCategory.toLowerCase().trim();
+      
+      // Verificar se é uma categoria raiz (tem subcategorias)
+      const rootSubcategories = categoryHierarchy.rootToSubcategories.get(selectedCategorySlug);
+      
+      if (rootSubcategories && rootSubcategories.size > 1) {
+        // É uma categoria raiz - incluir produtos da categoria e todas as subcategorias
+        result = result.filter((p) => {
+          const productCategorySlug = p.category?.toLowerCase().trim();
+          return rootSubcategories.has(productCategorySlug || '');
+        });
+      } else {
+        // É uma subcategoria ou categoria sem subcategorias - filtrar apenas essa categoria
+        result = result.filter((p) => {
+          const productCategorySlug = p.category?.toLowerCase().trim();
+          return productCategorySlug === selectedCategorySlug;
+        });
+      }
     }
 
     // Sort
@@ -116,7 +180,7 @@ const Index = () => {
     }
 
     return result;
-  }, [products, searchQuery, selectedCategory, selectedSort]);
+  }, [products, searchQuery, selectedCategory, selectedSort, categoryHierarchy]);
 
   // Analytics: tracking de busca (com debounce de 1 segundo)
   useEffect(() => {
