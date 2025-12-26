@@ -165,3 +165,4 @@ O componente `GeradorIA.tsx` fornece uma interface amigável para gerar conteúd
 - [Vercel Serverless Functions](https://vercel.com/docs/functions)
 - [Vite Proxy Configuration](https://vitejs.dev/config/server-options.html#server-proxy)
 
+

@@ -142,17 +142,21 @@ const ProductForm = ({
           description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
         });
       } else {
+        // Não mostrar erro destrutivo para falha na busca automática
+        // É apenas uma funcionalidade opcional
         toast({
-          title: 'Não foi possível extrair',
-          description: result.error || 'Tente preencher os campos manualmente.',
-          variant: 'destructive',
+          title: 'Busca automática indisponível',
+          description: result.error || 'Você pode preencher os campos manualmente.',
+          variant: 'default',
         });
       }
     } catch (error) {
+      console.error('Erro ao buscar link preview:', error);
+      // Não mostrar erro destrutivo - é apenas uma funcionalidade opcional
       toast({
-        title: 'Erro na busca',
-        description: 'Ocorreu um erro ao buscar informações. Tente novamente.',
-        variant: 'destructive',
+        title: 'Busca automática indisponível',
+        description: 'Você pode preencher os campos manualmente.',
+        variant: 'default',
       });
     } finally {
       setIsFetchingPreview(false);

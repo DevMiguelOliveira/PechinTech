@@ -217,3 +217,4 @@ export function GeradorIA({ onContentGenerated, initialTema = '' }: GeradorIAPro
   );
 }
 
+

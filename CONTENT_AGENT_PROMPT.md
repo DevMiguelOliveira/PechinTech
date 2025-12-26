@@ -118,3 +118,4 @@ Use junto a uma função como:
 generatePost("novidades placas de vídeo 2025");
 ```
 
+

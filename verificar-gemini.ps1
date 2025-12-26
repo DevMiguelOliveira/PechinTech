@@ -46,3 +46,4 @@ if (Test-Path $envFile) {
 Write-Host ""
 Write-Host "=== Verificação Concluída ===" -ForegroundColor Cyan
 
+

@@ -87,3 +87,4 @@ export function gerarExcerptEstruturado(
   return conteudoEstruturado.title;
 }
 
+

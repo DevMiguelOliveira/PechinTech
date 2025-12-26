@@ -86,9 +86,18 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
     };
   } catch (error) {
     console.error('Erro ao buscar link preview:', error);
+    
+    // Mensagens de erro mais específicas
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return {
+        success: false,
+        error: 'Erro de conexão. Verifique sua internet e tente novamente.',
+      };
+    }
+    
     return {
       success: false,
-      error: 'Erro de conexão. Verifique sua internet.',
+      error: 'Não foi possível conectar ao serviço de busca automática. Você pode preencher os campos manualmente.',
     };
   }
 }

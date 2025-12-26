@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface DbProduct {
   id: string;
@@ -91,16 +92,49 @@ export function useActiveProducts() {
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();
+  const { user, isAdmin } = useAuth();
 
   return useMutation({
     mutationFn: async (product: ProductFormData) => {
+      // Verificar autenticação primeiro
+      if (!user) {
+        throw new Error('Você precisa estar autenticado para criar produtos. Faça login e tente novamente.');
+      }
+
+      // Verificar se é admin (verificação adicional no frontend)
+      if (!isAdmin) {
+        throw new Error('Você não tem permissão para criar produtos. Apenas administradores podem criar produtos.');
+      }
+
+      // Verificar novamente no backend para garantir
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !currentUser) {
+        throw new Error('Erro de autenticação. Faça login novamente e tente.');
+      }
+
+      // Tentar criar o produto
       const { data, error } = await supabase
         .from('products')
         .insert([product])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Mensagens de erro mais específicas
+        if (error.code === '42501' || error.message.includes('permission') || error.message.includes('policy')) {
+          throw new Error('Você não tem permissão para criar produtos. Verifique se você é um administrador.');
+        }
+        if (error.code === '23505') {
+          throw new Error('Já existe um produto com essas informações. Verifique os dados e tente novamente.');
+        }
+        if (error.code === '23503') {
+          throw new Error('Categoria inválida. Verifique se a categoria selecionada existe.');
+        }
+        console.error('Erro ao criar produto:', error);
+        throw new Error(error.message || 'Erro ao criar produto. Verifique os dados e tente novamente.');
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -112,6 +146,7 @@ export function useCreateProduct() {
       });
     },
     onError: (error: Error) => {
+      console.error('Erro ao criar produto:', error);
       toast({
         title: 'Erro ao criar produto',
         description: error.message,
