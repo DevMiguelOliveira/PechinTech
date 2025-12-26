@@ -41,18 +41,36 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
   }
 
   try {
-    // Usa API serverless para evitar problemas de CORS
-    // Em desenvolvimento, pode precisar usar localhost:3000 se estiver rodando Vercel dev
-    // Em produção, usa o caminho relativo que será resolvido pelo Vercel
+    // Em desenvolvimento, tenta usar a API serverless se disponível
+    // Se não estiver disponível (Vercel dev não rodando), usa fallback direto
     const apiUrl = '/api/link-preview';
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url }),
-    });
+    
+    let response: Response;
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+      
+      // Se a API não existir (404), usa fallback direto
+      if (response.status === 404) {
+        throw new Error('API não disponível');
+      }
+    } catch (fetchError) {
+      // Em desenvolvimento, se a API não estiver disponível, usa fallback
+      if (import.meta.env.DEV) {
+        console.warn('API serverless não disponível em desenvolvimento, usando fallback');
+        return {
+          success: false,
+          error: 'API não disponível em desenvolvimento. Usando informações básicas.',
+          fallback: extractBasicInfo(url),
+        };
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
@@ -146,32 +164,24 @@ function extractStoreName(url: string): string {
     // Mapeamento de domínios conhecidos para nomes de lojas
     const storeMap: Record<string, string> = {
       'kabum.com.br': 'Kabum',
-      'www.kabum.com.br': 'Kabum',
       'pichau.com.br': 'Pichau',
-      'www.pichau.com.br': 'Pichau',
       'terabyteshop.com.br': 'Terabyte',
-      'www.terabyteshop.com.br': 'Terabyte',
       'amazon.com.br': 'Amazon',
-      'www.amazon.com.br': 'Amazon',
       'mercadolivre.com.br': 'Mercado Livre',
-      'www.mercadolivre.com.br': 'Mercado Livre',
       'magazineluiza.com.br': 'Magazine Luiza',
-      'www.magazineluiza.com.br': 'Magazine Luiza',
       'casasbahia.com.br': 'Casas Bahia',
-      'www.casasbahia.com.br': 'Casas Bahia',
       'americanas.com.br': 'Americanas',
-      'www.americanas.com.br': 'Americanas',
       'shopee.com.br': 'Shopee',
-      'www.shopee.com.br': 'Shopee',
       'aliexpress.com': 'AliExpress',
       'pt.aliexpress.com': 'AliExpress',
       'chipart.com.br': 'Chipart',
-      'www.chipart.com.br': 'Chipart',
     };
 
-    // Retorna o nome mapeado ou formata o hostname
-    if (storeMap[hostname]) {
-      return storeMap[hostname];
+    // Verifica se o hostname contém algum dos domínios mapeados
+    for (const [domain, name] of Object.entries(storeMap)) {
+      if (hostname.includes(domain)) {
+        return name;
+      }
     }
 
     // Formata o hostname removendo www e .com.br/.com
@@ -180,57 +190,6 @@ function extractStoreName(url: string): string {
       .replace(/\.com\.br$/, '')
       .replace(/\.com$/, '')
       .split('.')[0];
-    
-    // Capitaliza a primeira letra
-    return storeName.charAt(0).toUpperCase() + storeName.slice(1);
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Extrai o nome da loja a partir da URL
- */
-function extractStoreName(url: string): string {
-  try {
-    const hostname = new URL(url).hostname;
-    
-    // Mapeamento de domínios conhecidos para nomes de lojas
-    const storeMap: Record<string, string> = {
-      'kabum.com.br': 'Kabum',
-      'www.kabum.com.br': 'Kabum',
-      'pichau.com.br': 'Pichau',
-      'www.pichau.com.br': 'Pichau',
-      'terabyteshop.com.br': 'Terabyte',
-      'www.terabyteshop.com.br': 'Terabyte',
-      'amazon.com.br': 'Amazon',
-      'www.amazon.com.br': 'Amazon',
-      'mercadolivre.com.br': 'Mercado Livre',
-      'www.mercadolivre.com.br': 'Mercado Livre',
-      'magazineluiza.com.br': 'Magazine Luiza',
-      'www.magazineluiza.com.br': 'Magazine Luiza',
-      'casasbahia.com.br': 'Casas Bahia',
-      'www.casasbahia.com.br': 'Casas Bahia',
-      'americanas.com.br': 'Americanas',
-      'www.americanas.com.br': 'Americanas',
-      'shopee.com.br': 'Shopee',
-      'www.shopee.com.br': 'Shopee',
-      'aliexpress.com': 'AliExpress',
-      'pt.aliexpress.com': 'AliExpress',
-      'chipart.com.br': 'Chipart',
-      'www.chipart.com.br': 'Chipart',
-    };
-
-    // Retorna o nome mapeado ou formata o hostname
-    if (storeMap[hostname]) {
-      return storeMap[hostname];
-    }
-
-    // Formata o hostname removendo www e .com.br/.com
-    let storeName = hostname
-      .replace(/^www\./, '')
-      .replace(/\.com\.br$/, '')
-      .replace(/\.com$/, '');
     
     // Capitaliza a primeira letra
     return storeName.charAt(0).toUpperCase() + storeName.slice(1);
